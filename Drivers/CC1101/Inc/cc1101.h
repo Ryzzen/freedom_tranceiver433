@@ -104,10 +104,10 @@ extern "C" {
 #define CC1101_MOD_4FSK 0x04
 #define CC1101_MOD_MSK 0x07
 
-#define CC1101_READ(addr) (addr | 0x80)
-#define CC1101_READ_BURST(addr) (addr | 0xC0)
 #define CC1101_WRITE(addr) (addr)
 #define CC1101_WRITE_BURST(addr) (addr | 0x40)
+#define CC1101_READ(addr) (addr | 0x80)
+#define CC1101_READ_BURST(addr) (addr | 0xC0)
 
 #define RF_OSCILLATOR 26000
 

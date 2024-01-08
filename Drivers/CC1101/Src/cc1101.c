@@ -5,7 +5,9 @@ HAL_StatusTypeDef CC1101_ReadReg(CC1101_HandleTypeDef* this, uint8_t address, ui
 {
 	if (!this || !buf) { return HAL_ERROR; }
 
-	uint8_t header = size <= 1 ? CC1101_READ(address) : CC1101_READ_BURST(address);
+	/* uint8_t header = size <= 1 ? CC1101_READ(address) : CC1101_READ_BURST(address); */
+	uint8_t header = CC1101_READ_BURST(address);
+	size_t i = 0; while ( i < size) *(buf + i++) = 0;
 
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
 
@@ -13,6 +15,9 @@ HAL_StatusTypeDef CC1101_ReadReg(CC1101_HandleTypeDef* this, uint8_t address, ui
 	HAL_StatusTypeDef status = HAL_SPI_Receive(this->hspi, buf, size, CC1101_SPI_DELAY);
 
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+
+	DWT_Init();
+	DWT_Delay(50);
 
 	return status;
 }
@@ -22,7 +27,8 @@ static HAL_StatusTypeDef CC1101_WriteReg(CC1101_HandleTypeDef* this, uint8_t add
 	if (!this) { return HAL_ERROR; }
 
 	HAL_StatusTypeDef status;
-	uint8_t header = (data && size) ? (size <= 1) ? CC1101_WRITE(address) : CC1101_WRITE_BURST(address) : address;
+	/* uint8_t header = (data && size) ? (size <= 1) ? CC1101_WRITE(address) : CC1101_WRITE_BURST(address) : address; */
+	uint8_t header = (data && size) ? CC1101_WRITE_BURST(address) : address;
 
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
 
@@ -32,6 +38,9 @@ static HAL_StatusTypeDef CC1101_WriteReg(CC1101_HandleTypeDef* this, uint8_t add
 		status = HAL_SPI_Transmit(this->hspi, data, size, CC1101_SPI_DELAY);
 
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+	
+	DWT_Init();
+	DWT_Delay(50);
 
 	return status;
 }
@@ -107,7 +116,7 @@ void CC1101_SendPacket(CC1101_HandleTypeDef* this, uint8_t* buf, uint8_t size)
 
 	uint8_t state = 0;
 
-	/* this->WriteReg(this, CC1101_SIDLE, NULL, 0); */
+	this->WriteReg(this, CC1101_SIDLE, NULL, 0);
 
 	/* this->WriteReg(this, CC1101_PKTLEN, &size, 1); */
 
@@ -128,15 +137,16 @@ void CC1101_SendPacket(CC1101_HandleTypeDef* this, uint8_t* buf, uint8_t size)
 
 
 	this->ReadReg(this, CC1101_PKTSTATUS, &state, 1);
-	while (!(state & 0x01))
-		this->ReadReg(this, CC1101_PKTSTATUS, &state, 1);
+	/* while (!(state & 0x01)) */
+	/* 	this->ReadReg(this, CC1101_PKTSTATUS, &state, 1); */
 	while (state & 0x01)
 		this->ReadReg(this, CC1101_PKTSTATUS, &state, 1);
 
 	this->WriteReg(this, CC1101_SIDLE, NULL, 0);
-	while ((state & 0x1F) != 0x01) {
-		this->ReadReg(this, CC1101_MARCSTATE, &state, 1);
-	}
+
+	/* this->ReadReg(this, CC1101_MARCSTATE, &state, 1); */
+	/* while ((state & 0x1F) != 0x01) */
+	/* 	this->ReadReg(this, CC1101_MARCSTATE, &state, 1); */
 
 	this->WriteReg(this, CC1101_SFTX, NULL, 0);
 	/* this->ReadReg(this, CC1101_MARCSTATE, &state, 1); */
@@ -157,7 +167,7 @@ void CC1101_Reset(CC1101_HandleTypeDef* this)
 	DWT_Delay(10);
 
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
-	DWT_Delay(40);
+	DWT_Delay(40 - 10);
 
 	this->WriteReg(this, CC1101_SRES, NULL, 0);
 }
@@ -174,21 +184,19 @@ CC1101_HandleTypeDef CC1101_Init(SPI_HandleTypeDef* hspi, rfSettings settings)
 		CC1101_ConfUpdate,
 		CC1101_SendPacket
 	};
+	uint8_t pa_table[] = {0x00,0xc0,0x00,0x00,0x00,0x00,0x00,0x00};
+	uint8_t version;
 
 	handle.Reset(&handle);
 
+	handle.ReadReg(&handle, CC1101_VERSION, &version, 1);
+
 	handle.WriteReg(&handle, CC1101_SIDLE, NULL, 0);
-	uint8_t pa_table[] = {0x00,0xc0,0x00,0x00,0x00,0x00,0x00,0x00};
+
 	handle.WriteReg(&handle, CC1101_PATABLE, pa_table, sizeof(pa_table));
 	handle.WriteReg(&handle, CC1101_SFRX, NULL, 0);
 	handle.WriteReg(&handle, CC1101_SFTX, NULL, 0);
 	handle.WriteReg(&handle, CC1101_SIDLE, NULL, 0);
-
-	uint8_t stat[8];
-
-	handle.ReadReg(&handle, CC1101_PATABLE, stat, 8);
-	__BKPT();
-
 
 	return handle;
 }

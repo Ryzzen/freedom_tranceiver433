@@ -28,6 +28,31 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 
+#define PWM_SIZE 3
+#define PWM_TRUE 0b110
+#define PWM_FALSE 0b100
+#define ARRAY_TO_BIT(array, bit, size) ((array[bit / (8 * size)] >> bit) & 1)
+#define PWM_BIT_ENCODE(bit) (bit ? PWM_TRUE : PWM_FALSE)
+
+void PWM_Encode(uint8_t* src, uint8_t* dst, size_t size)
+{
+	for (size_t i, i2 = 0; i < (size * 8) ; i++) {
+		uint8_t sym = PWM_BIT_ENCODE(ARRAY_TO_BIT(src, i, sizeof(uint8_t)));
+		uint8_t sym_pos = (i * PWM_SIZE) % 8;
+
+		if (sym_pos > 0 && sym_pos < 3) {
+			uint8_t prev_pos = PWM_SIZE - sym_pos;
+
+			dst[i2++] |= (sym & prev_pos) << (8 - prev_pos);
+			dst[i2] = (sym & (sym_pos << prev_pos)) << sym_pos;
+		} else {
+			sym_pos = (i2 > 0) ? PWM_SIZE - sym_pos : sym_pos;
+			dst[i2] |= sym << sym_pos;
+		}
+	}
+}
+
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -62,11 +87,11 @@ int main(void)
 		0x10,  // FREQ2         Frequency Control Word, High Byte
 		0xB0,  // FREQ1         Frequency Control Word, Middle Byte
 		0x71,  // FREQ0         Frequency Control Word, Low Byte
-		0xFF,  // MDMCFG4       Modem Configuration
-		0xDE,  // MDMCFG3       Modem Configuration
+		0xF5,  // MDMCFG4       Modem Configuration
+		0xE9,  // MDMCFG3       Modem Configuration
 		0x30,  // MDMCFG2       Modem Configuration
-		0x02,  // MDMCFG1       Modem Configuration
-		0xF8,  // MDMCFG0       Modem Configuration
+		0x20,  // MDMCFG1       Modem Configuration
+		0x00,  // MDMCFG0       Modem Configuration
 		0x15,  // DEVIATN       Modem Deviation Setting
 		0x07,  // MCSM2         Main Radio Control State Machine Configuration
 		0x30,  // MCSM1         Main Radio Control State Machine Configuration
@@ -81,7 +106,7 @@ int main(void)
 		0xF8,  // WORCTRL       Wake On Radio Control
 		0x56,  // FREND1        Front End RX Configuration
 		0x11,  // FREND0        Front End TX Configuration
-		0xEA,  // FSCAL3        Frequency Synthesizer Calibration
+		0xE9,  // FSCAL3        Frequency Synthesizer Calibration
 		0x2A,  // FSCAL2        Frequency Synthesizer Calibration
 		0x00,  // FSCAL1        Frequency Synthesizer Calibration
 		0x1F,  // FSCAL0        Frequency Synthesizer Calibration
@@ -98,7 +123,9 @@ int main(void)
 	CC1101_HandleTypeDef hcc1101 = CC1101_Init(&hspi2, settings);
 	hcc1101.settings = settings;
 	hcc1101.ConfUpdate(&hcc1101);
-	volatile uint8_t data[] = {0b0, 0b01110001, 0b00100111, 0b01101101, 0b10001110};
+	volatile uint8_t data[] = {0b10000001, 0b10101010};
+	/* volatile uint8_t data[] = {0b0, 0b01110001, 0b00100111, 0b01101101, 0b10001110}; */
+	/* volatile uint8_t data[] = {0xde, 0xad, 0xbe, 0xef}; */
 
 	while (1)
 	{

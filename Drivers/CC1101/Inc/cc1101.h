@@ -163,21 +163,25 @@ typedef struct rfSettings_s {
     uint8_t test2;      // Various Test Settings
     uint8_t test1;      // Various Test Settings
     uint8_t test0;      // Various Test Settings
+	uint8_t pa_table[8]; // PA Table
 } rfSettings;
 
 typedef struct CC1101_Handle_s {
 	SPI_HandleTypeDef *hspi;
 	rfSettings settings;
 
-	void (*Reset)(struct CC1101_Handle_s*);
-	HAL_StatusTypeDef (*ReadReg)(struct CC1101_Handle_s*, uint8_t, uint8_t*, size_t);
-	HAL_StatusTypeDef (*WriteReg)(struct CC1101_Handle_s*, uint8_t, uint8_t*, size_t);
-	void (*ConfUpdate)(struct CC1101_Handle_s*);
 	void (*SendPacket) (struct CC1101_Handle_s*, uint8_t*, uint8_t);
 } CC1101_HandleTypeDef;
 
-/* uint8_t CC1101_ReadReg(CC1101_HandleTypeDef*, uint8_t); */
-CC1101_HandleTypeDef CC1101_Init(SPI_HandleTypeDef*, rfSettings);
+static HAL_StatusTypeDef CC1101_ReadReg(CC1101_HandleTypeDef* this, uint8_t address, uint8_t* buf, size_t size);
+static HAL_StatusTypeDef CC1101_WriteReg(CC1101_HandleTypeDef* this, uint8_t address, uint8_t* data, size_t size);
+static HAL_StatusTypeDef CC1101_WriteData(CC1101_HandleTypeDef* this, uint8_t* data, uint8_t size);
+static void CC1101_ConfUpdate(CC1101_HandleTypeDef* this);
+static void CC1101_Reset(CC1101_HandleTypeDef* this);
+static void CC1101_SendPacket(CC1101_HandleTypeDef* this, uint8_t* buf, uint8_t size);
+
+void CC1101_Init(CC1101_HandleTypeDef* this, SPI_HandleTypeDef* hspi, rfSettings settings);
+
 
 #ifdef __cplusplus
 }

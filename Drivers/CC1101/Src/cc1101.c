@@ -9,12 +9,12 @@ static HAL_StatusTypeDef CC1101_ReadReg(CC1101_HandleTypeDef* this, uint8_t addr
 	uint8_t header = CC1101_READ_BURST(address);
 	size_t i = 0; while ( i < size) *(buf + i++) = 0;
 
-	SELECT;
+	SPI_SELECT;
 
 	HAL_SPI_Transmit(this->hspi, &header, 1, CC1101_SPI_DELAY);
 	HAL_StatusTypeDef status = HAL_SPI_Receive(this->hspi, buf, size, CC1101_SPI_DELAY);
 
-	DESELECT;
+	SPI_DESELECT;
 
 	DWT_Init();
 	DWT_Delay(50);
@@ -30,14 +30,14 @@ static HAL_StatusTypeDef CC1101_WriteReg(CC1101_HandleTypeDef* this, uint8_t add
 	/* uint8_t header = (data && size) ? (size <= 1) ? CC1101_WRITE(address) : CC1101_WRITE_BURST(address) : address; */
 	uint8_t header = (data && size) ? CC1101_WRITE_BURST(address) : address;
 
-	SELECT;
+	SPI_SELECT;
 
 	status = HAL_SPI_Transmit(this->hspi, &header, 1, CC1101_SPI_DELAY);
 
 	if (status == HAL_OK && data)
 		status = HAL_SPI_Transmit(this->hspi, data, size, CC1101_SPI_DELAY);
 
-	DESELECT;
+	SPI_DESELECT;
 	
 	DWT_Init();
 	DWT_Delay(50);

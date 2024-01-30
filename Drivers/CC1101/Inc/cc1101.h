@@ -11,6 +11,9 @@ extern "C" {
 #define CC1101_SPI_DELAY 100
 
 
+#define SELECT HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+#define DESELECT HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+
 // CC2500/CC1100 STROBE, CONTROL AND STATUS REGSITER
 #define CC1101_IOCFG2 0x00 // GDO2 output pin configuration
 #define CC1101_IOCFG1 0x01 // GDO1 output pin configuration

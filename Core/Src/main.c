@@ -29,29 +29,47 @@ static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 
 #define PWM_SIZE 3
-#define PWM_TRUE 0b110
-#define PWM_FALSE 0b100
-#define ARRAY_TO_BIT(array, bit, size) ((array[bit / (8 * size)] >> bit) & 1)
+#define PWM_TRUE 0b011
+#define PWM_FALSE 0b001
+#define ARRAY_TO_BIT(array, bit, size) ((array[bit / (8 * size)] >> (((8 * size) - 1) - bit)) & 1)
 #define PWM_BIT_ENCODE(bit) (bit ? PWM_TRUE : PWM_FALSE)
 
-void PWM_Encode(uint8_t* src, uint8_t* dst, size_t size)
-{
-	for (size_t i, i2 = 0; i < (size * 8) ; i++) {
-		uint8_t sym = PWM_BIT_ENCODE(ARRAY_TO_BIT(src, i, sizeof(uint8_t)));
-		uint8_t sym_pos = (i * PWM_SIZE) % 8;
+#define SET_BIT_ARRAY(out, index, value) (out[((index) - ((index) % 8)) / 8] |= (value&1) << (7-((index) % 8)))
 
-		if (sym_pos > 0 && sym_pos < 3) {
-			uint8_t prev_pos = PWM_SIZE - sym_pos;
-
-			dst[i2++] |= (sym & prev_pos) << (8 - prev_pos);
-			dst[i2] = (sym & (sym_pos << prev_pos)) << sym_pos;
-		} else {
-			sym_pos = (i2 > 0) ? PWM_SIZE - sym_pos : sym_pos;
-			dst[i2] |= sym << sym_pos;
-		}
-	}
+void PWM_Encode(uint8_t* in , uint8_t* out, size_t size_in){
+    for(size_t i = 0;i < size_in ;i++) {
+        for (int8_t b=0;b<8;b++) {
+            if (in[i] & (1 << (7 - b))) {
+                SET_BIT_ARRAY(out, (i*8+b)*3   , (PWM_TRUE&0b100) >> 2);
+                SET_BIT_ARRAY(out, (i*8+b)*3 +1, (PWM_TRUE&0b010) >> 1);
+                SET_BIT_ARRAY(out, (i*8+b)*3 +2, (PWM_TRUE&0b001)     );
+            } else {
+                SET_BIT_ARRAY(out, (i*8+b)*3   , (PWM_FALSE&0b100) >> 2);
+                SET_BIT_ARRAY(out, (i*8+b)*3 +1, (PWM_FALSE&0b010) >> 1);
+                SET_BIT_ARRAY(out, (i*8+b)*3 +2, (PWM_FALSE&0b001)     );
+            }
+        }
+    }
+    
 }
 
+void nice_reformat(uint8_t* pwm_data)
+{
+	uint8_t tmp;
+	uint8_t tmp2;
+
+	// Adding manual 1 bit preamble
+	tmp = pwm_data[0] & 1;
+	pwm_data[0] = (pwm_data[0] >> 1) | (1 << 7);
+	for (uint8_t i = 1; i < 5; i++) {
+		tmp2 = pwm_data[i] & 1;
+		pwm_data[i] = (pwm_data[i] >> 1) | (tmp << 7);
+		tmp = tmp2;
+	}
+
+	// Triming useless bits
+	pwm_data[4] &= (0xFF << 2);
+}
 
 /**
   * @brief  The application entry point.
@@ -59,13 +77,10 @@ void PWM_Encode(uint8_t* src, uint8_t* dst, size_t size)
   */
 int main(void)
 {
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 	HAL_Init();
 
-	/* Configure the system clock */
 	SystemClock_Config();
 
-	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
 	MX_SPI2_Init();
 	MX_USB_DEVICE_Init();
@@ -77,9 +92,9 @@ int main(void)
 		0x07,  // FIFOTHR       RX FIFO and TX FIFO Thresholds
 		0xD3,  // SYNC1         Sync Word, High Byte
 		0x91,  // SYNC0         Sync Word, Low Byte
-		0xFF,  // PKTLEN        Packet Length
+		0x5,   // PKTLEN        Packet Length
 		0x04,  // PKTCTRL1      Packet Automation Control
-		0x01,  // PKTCTRL0      Packet Automation Control
+		0x00,  // PKTCTRL0      Packet Automation Control
 		0x00,  // ADDR          Device Address
 		0x00,  // CHANNR        Channel Number
 		0x06,  // FSCTRL1       Frequency Synthesizer Control
@@ -123,15 +138,18 @@ int main(void)
 	CC1101_HandleTypeDef hcc1101 = CC1101_Init(&hspi2, settings);
 	hcc1101.settings = settings;
 	hcc1101.ConfUpdate(&hcc1101);
-	volatile uint8_t data[] = {0b10000001, 0b10101010};
-	/* volatile uint8_t data[] = {0b0, 0b01110001, 0b00100111, 0b01101101, 0b10001110}; */
-	/* volatile uint8_t data[] = {0xde, 0xad, 0xbe, 0xef}; */
+
+	uint8_t volatile data[] = {0b01000111, 0b01100000};
+
+	uint8_t volatile data_encode[2*PWM_SIZE] = {0};
+	PWM_Encode(data, data_encode, 2);
+	nice_reformat(data_encode);
 
 	while (1)
 	{
-		HAL_Delay(25);
-		hcc1101.SendPacket(&hcc1101, data, sizeof(data));
+		HAL_Delay(15);
 
+		hcc1101.SendPacket(&hcc1101, data_encode, 5);
 	}
 }
 

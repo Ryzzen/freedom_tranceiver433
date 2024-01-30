@@ -133,11 +133,11 @@ int main(void)
 		0x81,  // TEST2         Various Test Settings
 		0x35,  // TEST1         Various Test Settings
 		0x09,  // TEST0         Various Test Settings
+		{0x00,0xc0,0x00,0x00,0x00,0x00,0x00,0x00},
 	};
 
-	CC1101_HandleTypeDef hcc1101 = CC1101_Init(&hspi2, settings);
-	hcc1101.settings = settings;
-	hcc1101.ConfUpdate(&hcc1101);
+	CC1101_HandleTypeDef hcc1101;
+	CC1101_Init(&hcc1101, &hspi2, settings);
 
 	uint8_t volatile data[] = {0b01000111, 0b01100000};
 

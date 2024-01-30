@@ -118,10 +118,10 @@ static void CC1101_Reset(CC1101_HandleTypeDef* this)
 
 	DWT_Init();
 
-	SELECT;
+	SPI_SELECT;
 	DWT_Delay(10);
 
-	DESELECT;
+	SPI_DESELECT;
 	DWT_Delay(40 - 10);
 
 	CC1101_WriteReg(this, CC1101_SRES, NULL, 0);

@@ -61,6 +61,8 @@ static HAL_StatusTypeDef CC1101_WriteData(CC1101_HandleTypeDef* this, uint8_t* d
 
 static void CC1101_ConfUpdate(CC1101_HandleTypeDef* this)
 {
+	if (!this) { return; }
+
 	CC1101_WriteReg(this, CC1101_IOCFG2, &this->settings.iocfg2, 1);
 	CC1101_WriteReg(this, CC1101_IOCFG1, &this->settings.iocfg1, 1);
 	CC1101_WriteReg(this, CC1101_IOCFG0, &this->settings.iocfg0, 1);
@@ -144,6 +146,8 @@ static void CC1101_SendPacket(CC1101_HandleTypeDef* this, uint8_t* buf, uint8_t 
 
 void CC1101_Init(CC1101_HandleTypeDef* this, SPI_HandleTypeDef* hspi, rfSettings settings)
 {
+	if (!this || !hspi) { return; }
+
 	this->hspi = hspi;
 	this->settings = settings;
 	this->SendPacket = CC1101_SendPacket;

@@ -37,14 +37,17 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 			 Core/Src/main.c \
+			 Core/Src/syscalls.c \
 			 Core/Src/dwt_delay.c \
+			 Drivers/CC1101/Src/cc1101.c \
+			 Modules/Src/nice.c \
+			 Modules/Src/nice_rf.c \
 			 Core/Src/stm32f1xx_it.c \
 			 Core/Src/stm32f1xx_hal_msp.c \
 			 USB_DEVICE/App/usb_device.c \
 			 USB_DEVICE/App/usbd_desc.c \
 			 USB_DEVICE/App/usbd_cdc_if.c \
 			 USB_DEVICE/Target/usbd_conf.c \
-			 Drivers/CC1101/Src/cc1101.c \
 			 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
 			 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd.c \
 			 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd_ex.c \
@@ -133,6 +136,7 @@ C_INCLUDES =  \
 			  -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
 			  -IDrivers/CMSIS/Include \
 			  -IDrivers/CC1101/Inc \
+			  -IModules/Inc \
 
 
 # compile gcc flags
@@ -156,7 +160,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32F103C8Tx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys 
+LIBS = -lc -lm
 LIBDIR = 
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 

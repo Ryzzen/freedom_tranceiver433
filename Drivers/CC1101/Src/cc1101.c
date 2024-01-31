@@ -112,6 +112,7 @@ static void CC1101_ConfUpdate(CC1101_HandleTypeDef* this)
 	CC1101_WriteReg(this, CC1101_TEST0, &this->settings.test0, 1);
 }
 
+// Manual reset routine as define in the documentation
 static void CC1101_Reset(CC1101_HandleTypeDef* this)
 {
 	if (!this) { return; }

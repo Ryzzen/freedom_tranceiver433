@@ -54,16 +54,16 @@ static void Nice_MakePacket(niceModule* this, uint8_t* packet)
 		packet[i] = data_encode[i];
 }
 
-static void* Nice_Mutate(void* _this, uint32_t field, void* corpus)
+void* Nice_Bruteforce(void* _this, uint32_t field)
 {
 	niceModule* this = (niceModule*)(_this);
 
 
 	if (field == ID) {
-		this->id++;
+		this->id = (this->id + 1) % NICE_MAX_ID;
 	} else if (field == CHANNEL) {
-		this->channel++;
-	} else { return NULL; }
+		this->channel = (this->channel + 1) % NICE_MAX_CHANNEL;
+	}
 
 	uint8_t* packet = malloc(sizeof(uint8_t) * NICE_PACKETSIZE);
 	Nice_MakePacket(this, packet);
@@ -71,7 +71,7 @@ static void* Nice_Mutate(void* _this, uint32_t field, void* corpus)
 }
 
 
-void Nice_Init(void* _this, niceTranceivers tranceiver, uint16_t id, uint8_t channel)
+void Nice_Init(niceModule* this, niceTranceivers tranceiver, uint16_t id, uint8_t channel)
 {
-	niceModule* this = (niceModule*)(_this);
+
 }

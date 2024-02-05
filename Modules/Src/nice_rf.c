@@ -4,7 +4,7 @@
 #include "cc1101.h"
 
 
-void* Nice_CC1101RfSettings()
+static void* Nice_CC1101RfSettings()
 {
 	rfSettings* settings = malloc(sizeof(rfSettings));
 

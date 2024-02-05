@@ -10,6 +10,7 @@ extern "C" {
 
 #define NICE_PACKETSIZE 5
 #define NICE_MAX_ID 1024
+#define NICE_MAX_CHANNEL 4
 
 #define PWM_SIZE 3
 #define PWM_TRUE 0b011
@@ -34,12 +35,17 @@ typedef enum niceParam_e {
 typedef struct niceModule_s {
 	niceTranceivers tranceiver;
 	uint16_t id;
-	uint8_t channel
+	uint8_t channel;
+
+	void* (*GetRfSettings)(niceModule*);
+	void* (*Bruteforce)(niceModule*, uint32_t field);
 } niceModule;
 
 
+static void* Nice_Bruteforce(void* _this, uint32_t field)
+static void* Nice_GetRfSettings(niceModule* this);
 
-void* Nice_GetRfSettings(niceModule* this);
+void Nice_Init(niceModule* this, Tranceivers tranceiver, uint16_t id, uint8_t channel)
 
 #ifdef __cplusplus
 }

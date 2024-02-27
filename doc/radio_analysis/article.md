@@ -148,7 +148,7 @@ def calculate_bit_timing(_signal):
 ```
 
 
-![Histogram](./images/schema.png)
+![Histogram](./images/histogram.png)
 
 
 Et justement, grâce à l'histogramme, on voit que le plus petit compte (la valeur très basse près de 0) est certainement une erreur, étant donné sa très faible fréquence d'apparition. Je considère donc le compte suivant comme étant la durée d'un bit en échantillons, puis le dernier compte comme étant la durée de la pause entre chaque message.

@@ -30,7 +30,7 @@ Le circuit semble centré autour du microcontrôleur. Tous les composants cités
 
 On imagine assez facilement que tous les boutons, une fois combinés, forment le message envoyé par la télécommande.
 
-Au vu de la simplicité du microcontrôleur, je doute fortement que ce dernier ait besoin d'être cadencé à 433MHz. Sachant que cette fréquence est très souvent utilisée comme fréquence de porteuse en radio, j'imagine plutôt que ce dernier fournit un signal carré qui, une fois filtré correctement par le paquet de composants situé entre lui et l'antenne, fournit la porteuse sinusoïdale de 433MHz qui module le signal.
+Au vu de la simplicité du microcontrôleur, je doute fortement que ce dernier ait besoin d'être cadencé à 433MHz. Sachant que cette fréquence est très souvent utilisée comme fréquence de porteuse en radio, on imagine plutôt que ce dernier fournit un signal carré qui, une fois filtré correctement par le paquet de composants situé entre lui et l'antenne, fournit la porteuse sinusoïdale de 433MHz qui module le signal.
 
 En fait, ce circuit ressemble fortement à un circuit basique de transmetteur radio modulé en OOK (On / Off Keying). Ou la porteuse, comme expliqué précédemment, est coupée via un transistor piloté par le microcontrôleur. Ce dernier code le message à envoyer et l'envoie à un baud rate prédéfini en coupant ou non le signal (On / Off) de la porteuse.
 
@@ -40,10 +40,11 @@ Voici donc un schéma paint de qualité, montrant, à ce stade, comment j'imagin
 
 ![Schema](./images/schema.png)
 
-L'ordre d'interraction des composants est certainement faux, mais ce n'est pas très important, j'ai prefere utiliser cet ordre pour simplifier le schéma.
+
+L'ordre d'interaction des composants est certainement faux, mais ce n'est pas très important. J'ai préféré utiliser cet ordre pour simplifier le schéma. Le transistor est très probablement positionné en contrôle de l'alimentation de l'oscillateur, pour éviter une consommation de courant inutile lorsque le signal est en position Off.
 
 Un message radio se doit d'être encodé pour réduire les erreurs à la réception. C'est le microcontrôleur qui semble gérer cela.
-Vu la simplicité du circuit, je pense que l'encodage l'est tout autant. En effet, presque tous les microcontrôleurs possèdent la capacité d'offrir une sortie PWM (Pulse Width Modulation), permettant de générer un signal carré dont la largeur est variable. Cette fonctionnalité est souvent utilisée par les constructeurs de télécommandes de garage en raison de sa simplicité et de son faible coût de développement. Cela semble cohérent avec la philosophie actuelle du circuit, je m'attends donc à le retrouver ici, même si, à l'heure actuelle, ce n'est qu'une supposition.
+Vu la simplicité du circuit, l'encodage l'est surement tout autant. En effet, presque tous les microcontrôleurs possèdent la capacité d'offrir une sortie PWM (Pulse Width Modulation), permettant de générer un signal carré dont la largeur est variable. Cette fonctionnalité est souvent utilisée par les constructeurs de télécommandes de garage en raison de sa simplicité et de son faible coût de développement. Cela semble cohérent avec la philosophie actuelle du circuit, je m'attends donc à le retrouver ici, même si, à l'heure actuelle, ce n'est qu'une supposition.
 
 En résumé, on a de la chance, le circuit semble simle. L'hypothèse actuelle est la suivante :
 La télécommande envoie un message comprenant un code long de 10 bits et une information sur lequel des 4 boutons est pressé. Ce message serait modulé en OOK et probablement encodé en PWM. Je ne connais pas de moyen de deviner le baud rate à ce stade de l'analyse.
@@ -55,16 +56,16 @@ Il est temps de vérifier tout cela.
 
 ### Acquisition du signal
 
-Je m'équipe d'un BladeRF pour capter le signal de la télécommande.
+On s'équipe d'un BladeRF pour capter le signal de la télécommande.
 
-Je m'assure premièrement de la fréquence à laquelle le signal est modulé.
+On s'assure premièrement de la fréquence à laquelle le signal est modulé.
 Pour cela, on peu utiliser Gnuradio. Rien de plus simple :
 On utilise le bloc OsmoSDR pour s'interfacer avec le BladeRF, on rend la fréquence variable, on affiche le plot en cascade, et on fait varier la frequence jusqu'a voir le signal.
 Le signal apparaît a 433MHz, on confirme la fréquence.
 
 On amplifie, centre, et filtre le signal en utilisant un bloc Multiply et un bloc Frequency Translating FIR Filter. Ensuite, on ajoute un bloc File Sink pour enregistrer le signal au format complexe et débuter son analyse.
 
-J'affiche l'enregistrement pour en avoir un premier aperçu.
+On affiche l'enregistrement pour en avoir un premier aperçu.
 
 ```python
 raw_data = np.fromfile("signal.raw", dtype="complex64")
@@ -121,7 +122,7 @@ Une manière simple de trouver le baud rate est de mesurer la durée du plus pet
 Pour le faire simplement, il suffit de soustraire au signal sa propre moyenne pour le recentrer sur 0, puis de compter l'écart d'échantillons entre chaque croisement du signal avec 0, pour enfin prendre le plus petit compte.
 Cette manière de faire possède un souci cependant. Cela sous-entend un signal parfait sans aucun bruit, et bonne chance pour avoir un tel signal.
 
-Pour pallier cela, je mets ce tableau de compte d'écart d'échantillons dans un histogramme pour visualiser moi-même quel compte a le plus de chances de correspondre à un bit.
+Pour pallier cela, on met ce tableau de compte d'écart d'échantillons dans un histogramme pour visualiser moi-même quel compte a le plus de chances de correspondre à un bit.
 La valeur de l'histogramme la plus petite, qui apparaît le plus souvent, est très probablement notre bit.
 Aussi, il y a une autre valeur de cet histogramme qui va nous intéresser. Non pas cette fois la durée la plus courte entre chaque croisement du signal avec 0, mais la plus longue.
 Cette valeur correspond à la durée du délai entre chaque message.
@@ -151,7 +152,7 @@ def calculate_bit_timing(_signal):
 ![Histogram](./images/histogram.png)
 
 
-Et justement, grâce à l'histogramme, on voit que le plus petit compte (la valeur très basse près de 0) est certainement une erreur, étant donné sa très faible fréquence d'apparition. Je considère donc le compte suivant comme étant la durée d'un bit en échantillons, puis le dernier compte comme étant la durée de la pause entre chaque message.
+Justement, grâce à l'histogramme, on voit que le plus petit compte (la valeur très basse près de 0) est certainement une erreur, étant donné sa très faible fréquence d'apparition. Je considère donc le compte suivant comme étant la durée d'un bit en échantillons, puis le dernier compte comme étant la durée de la pause entre chaque message.
 
 Ce qui nous donne les durées suivantes :
 
@@ -214,5 +215,6 @@ En résumé, notre analyse a révélé les caractéristiques suivantes :
 Nous avons identifié une modulation OOK, une fréquence de 433.92 MHz, un baud rate d'environ 1613, et un encodage PWM.
 Le protocole d'envoi de données comprend un bit de préambule, 10 bits pour le code de la télécommande, et 2 bits pour les boutons.
 Les informations obtenues ont été precisées et confirmées par des documents de la FCC, et on se servira de ses valeures pour la prochaine partie de l'article.
+Soit une correction du baud rate à 1515 et un délai entre chaque message de 25 ms.
 
 Alors, rendez-vous dans la partie 2, où l'on utilisera ces informations pour développer un outil de bruteforce de cette clé de garage pour 10 euros, en bare-metal C sur un microcontrôleur STM32 et un module radio TI CC1101 !

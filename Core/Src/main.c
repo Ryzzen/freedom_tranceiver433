@@ -44,6 +44,14 @@ int main(void)
 	MX_SPI2_Init();
 	MX_USB_DEVICE_Init();
 
+	uint32_t module_nb = NICE;
+	keyModule *key = KeyModule(module_nb);
+	rfSettings* settings = key->GetRfSettings(&nice);
+	CC1101_HandleTypeDef hcc1101;
+	CC1101_Init(&hcc1101, &hspi2, *settings);
+	free(settings);
+
+
 	niceModule nice;
 	Nice_Init(&nice, CC1101, 0, 3);
 
@@ -51,6 +59,10 @@ int main(void)
 	CC1101_HandleTypeDef hcc1101;
 	CC1101_Init(&hcc1101, &hspi2, *settings);
 	free(settings);
+
+	// keyModule module = GetModules(nb);
+	// module.Init();
+	// module.Bruteforce();
 
 	while (1)
 	{

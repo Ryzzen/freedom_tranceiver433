@@ -40,8 +40,8 @@ C_SOURCES =  \
 			 Core/Src/syscalls.c \
 			 Core/Src/dwt_delay.c \
 			 Drivers/CC1101/Src/cc1101.c \
-			 Modules/Src/nice.c \
-			 Modules/Src/nice_rf.c \
+			 KeyModules/Nice/Src/nice.c \
+			 KeyModules/Nice/Src/nice_rf.c \
 			 Core/Src/stm32f1xx_it.c \
 			 Core/Src/stm32f1xx_hal_msp.c \
 			 USB_DEVICE/App/usb_device.c \
@@ -136,7 +136,8 @@ C_INCLUDES =  \
 			  -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
 			  -IDrivers/CMSIS/Include \
 			  -IDrivers/CC1101/Inc \
-			  -IModules/Inc \
+			  -IKeyModules \
+			  -IKeyModules/Nice/Inc \
 
 
 # compile gcc flags

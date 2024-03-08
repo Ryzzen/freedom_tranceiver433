@@ -206,7 +206,8 @@ Les États-Unis étant un très gros marché mondial, je cherche généralement 
 
 ![FCC_doc](./images/fcc.webp)
 
-On y retrouve toutes les informations utiles. On peu voir que l'analyse n'etait pas si loins de la realite, avec quelques imprecisions au niveau des timings.
+
+On y retrouve toutes les informations utiles. On peut voir que l'analyse n'était pas si loin de la réalité, avec quelques imprécisions au niveau des timings.
 
 
 ## Conclusion

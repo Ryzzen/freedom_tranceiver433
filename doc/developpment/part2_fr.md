@@ -85,7 +85,7 @@ On cherche donc l'addresse a laquelle est mappe ce registre.
 ![GPIOA](./images/PORTA_map.png)
 ![GPIOA](./images/PORTA_offsets.png)
 
-Ce qui nous donne l'addresse suivante.
+Ce qui nous donne les valeures suivante.
 
 ```c
 #define GPIOA_base 0x0x40010800
@@ -93,8 +93,8 @@ Ce qui nous donne l'addresse suivante.
 
 #define GPIOA_CRL (*(GPIOA_base + GPIOA_CRL_offset))
 
-#define GPIO_CRL_MODE3 0b00000000 00000000
-#define GPIO_CRL_CNF3 0b00000000 00000000
+#define GPIO_CRL_MODE3 (0b11 << 12)
+#define GPIO_CRL_CNF3 (0b11 << 14)
 ```
 
 Si l'on souhaite mettre la pin3 en mode output, cet documentation nous demande donc de mettre les bits du registre GPIO_CR 12 a 13 (MODE3) a une valeure superieure a 0, et les bits 14 a 15 (CNF3) a 0b00, soit en mode push-pull (ce qui relie la pin a l'alimentaion Vdd).

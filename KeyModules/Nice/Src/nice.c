@@ -71,7 +71,7 @@ void* Nice_Bruteforce(void* _this, uint32_t field)
 }
 
 
-void Nice_Init(niceModule* this, niceTranceivers tranceiver, uint16_t id, uint8_t channel)
+void Nice_Init(niceModule* this, tranceivers tranceiver, uint16_t id, uint8_t channel)
 {
 
 }

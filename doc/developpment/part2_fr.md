@@ -28,6 +28,7 @@ Une fois recus et assemble, le miens ressemble a quelque chose comme cela:
 
 ![Full assembly](./images/Assembly.jpg)
 
+
 ## 2. Toolchain
 
 La toolchain de developpement sur microcontrôleur possède quelques particularites mais reste globalement similaire a une toolchain classique.
@@ -58,7 +59,85 @@ Pour resumer:
 
 ## 3. Developpement
 
+### Comment interagir avec un microcontrôleur ?
+
+Pour les non-inities, voici un tres rapide resumer des concepts qu'il faut savoir pour comprendre comment interagir avec un microcontrôleur.
+
+#### Memory mapped I/O
+Le gros de des interractions se font via les registres du microcontrôleur, accessible via ce que l'on appel du "memory mapped I/O".
+Pour une fonctionalite hardware du microcontrôleur, un ou plusieurs registres y est associe, et une addresse est associe a ce registre.
+On retrouve le mapping dans la documentation:
+
+![Memory mapping](./images/memory_map.png)
+
+Ainsi, si l'on souhaites par exemple allume une LED, on la connecte sur une pin dite GPIO (General Purpose Input Output) du microcontrôleur, et a sa masse.
+Il ne suffit ensuite plus que de communiquer au microcontrôleur via ses registres que l'on souhaite mettre cette pin en mode output, et la mettre a l'etat haut, soit 3,3V dans notre cas.
+
+Les GPIOs sont ranges par ports de 16 pins chacuns, pour permettre un registre de 2 octets par port.
+Prenons l'exemple de la pin 3 du port A.
+Pour mettre notre pin en mode output, on cherche dans la documentation le registre de configuration de cette derniere.
+
+![GPIO_CR](./images/GPIO_CR.png)
+
+
+On cherche donc l'addresse a laquelle est mappe ce registre.
+
+![GPIOA](./images/PORTA_map.png)
+![GPIOA](./images/PORTA_offsets.png)
+
+Ce qui nous donne l'addresse suivante.
+
+```c
+#define GPIOA_base 0x0x40010800
+#define GPIO_CRL_offset 0x00
+
+#define GPIOA_CRL (*(GPIOA_base + GPIOA_CRL_offset))
+
+#define GPIO_CRL_MODE3 0b00000000 00000000
+#define GPIO_CRL_CNF3 0b00000000 00000000
+```
+
+Si l'on souhaite mettre la pin3 en mode output, cet documentation nous demande donc de mettre les bits du registre GPIO_CR 12 a 13 (MODE3) a une valeure superieure a 0, et les bits 14 a 15 (CNF3) a 0b00, soit en mode push-pull (ce qui relie la pin a l'alimentaion Vdd).
+
+```c
+GPIOA_CRL |= GPIO_CRL_MODE3;
+GPIOA_CRL &= ~(GPIO_CRL_CNF3);
+```
+
+Il ne reste ensuite qu'a mettre la pin a l'etat haut.
+La documentation nous montre 2 facons pour faire cela.
+Une premiere permet de controler d'un coup l'integralite des pins du port.
+
+![GPIO ODR](./images/GPIO_ODR.png)
+
+Puis une seconde qui permet de controler chaque pin individuellement.
+
+![GPIO BSRR](./images/GPIO_BSRR.png)
+
+On met donc la pin a l'etat haut.
+
+```c
+GPIOA_BSRR = GPIO_BSRR_BS3;
+```
+
+#### Horloge
+
+
+
+#### Interruptions
+
+
 ### Initialisation du projet
+
+Pour initialiser le projet, nous avons besoin globalement de 4 choses:
+
+- Un loader script qui nous permettra de mapper nos differentes sections en memoire a des adresses definit par le constructeur du microcontrôleur.
+- Un startup code pour initialiser le microcontrôleur.
+- Un Makefile pour facilite le build.
+- Des headers definissant des les addresses des registres du microcontrôleur pour grandement facilite la lecture du code (dans le cas d'un microcontrôleur ARM, le constructeur doit ajouter ces definitions dans le CMSIS, il suffit donc de les importer).
+
+Tout cela peu se faire a la main et il est meme recommande de le faire. Cependant, pour un simple prototype, nous pouvons utiliser un outil propose par le constructeur du microcontrôleur: STM32CubeMX.
+ L'outil nous permettra aussi d'importer les definitions CMSIS et les librairies faites par STMicroelectronics.
 
 ### SPI
 

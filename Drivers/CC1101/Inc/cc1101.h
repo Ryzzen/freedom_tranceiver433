@@ -168,13 +168,12 @@ typedef struct rfSettings_s {
 
 typedef struct CC1101_Handle_s {
 	SPI_HandleTypeDef *hspi;
-	rfSettings settings;
 
 	void (*SendPacket) (struct CC1101_Handle_s*, uint8_t*, uint8_t);
 } CC1101_HandleTypeDef;
 
 
-void CC1101_Init(CC1101_HandleTypeDef* this, SPI_HandleTypeDef* hspi, rfSettings settings);
+void CC1101_Init(CC1101_HandleTypeDef* this, SPI_HandleTypeDef* hspi, rfSettings* settings);
 
 
 #ifdef __cplusplus

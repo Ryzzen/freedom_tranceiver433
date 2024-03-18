@@ -54,7 +54,7 @@ static void Nice_MakePacket(niceModule* this, uint8_t* packet)
 		packet[i] = data_encode[i];
 }
 
-void* Nice_AutoGeneratePacket(remoteModule* super, uint32_t field, uint8_t* packet, size_t size)
+static void* Nice_AutoGeneratePacket(remoteModule* super, uint32_t field, uint8_t* packet, size_t size)
 {
 	CHECK_OBJ NULL;
 	if (size < NICE_PACKETSIZE) return NULL;
@@ -71,7 +71,7 @@ void* Nice_AutoGeneratePacket(remoteModule* super, uint32_t field, uint8_t* pack
 	return packet;
 }
 
-void* Nice_GeneratePacket(remoteModule* super, uint8_t* packet_fields,  size_t packet_fields_size, uint8_t* packet, size_t size)
+static void* Nice_GeneratePacket(remoteModule* super, uint8_t* packet_fields,  size_t packet_fields_size, uint8_t* packet, size_t size)
 {
 	CHECK_OBJ NULL;
 	if ((packet_fields_size < 2) || (size < NICE_PACKETSIZE)) return NULL;
@@ -85,13 +85,13 @@ void* Nice_GeneratePacket(remoteModule* super, uint8_t* packet_fields,  size_t p
 	return packet;
 }
 
-void Nice_Destructor(remoteModule* super) {
+static void Nice_Destructor(remoteModule* super) {
 	CHECK_OBJ;
 
 	S_FREE(super->this);
 }
 
-void Nice_New(remoteModule* super, tranceivers tranceiver)
+void Nice_Init(remoteModule* super, tranceivers tranceiver)
 {
 	niceModule* this          = malloc(sizeof(niceModule));
 

@@ -1,14 +1,12 @@
 #include "remote_module.h"
 #include "nice.h"
 
-remoteModule NewRemoteModule(remoteModuleType type, tranceivers tranceiver)
+void InitRemoteModule(remoteModule* base, remoteModuleType type, tranceivers tranceiver)
 {
 	static remoteModuleFactory factory[REMOTE_MODULE_MAX] = {
-        &Nice_New
+        &Nice_Init
     };
 
-	remoteModule base;
-	factory[type](&base, tranceiver);
-
-	return base;
+	factory[type](base, tranceiver);
+	return;
 }

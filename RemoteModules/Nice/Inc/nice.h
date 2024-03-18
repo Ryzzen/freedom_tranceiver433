@@ -36,7 +36,7 @@ typedef struct niceModule_s {
 } niceModule;
 
 
-void Nice_New(remoteModule*, tranceivers);
+void Nice_Init(remoteModule*, tranceivers);
 void* Nice_GetRfSettings(remoteModule*);
 
 #ifdef __cplusplus

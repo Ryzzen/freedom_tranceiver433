@@ -45,16 +45,19 @@ int main(void)
 	MX_USB_DEVICE_Init();
 
 	CC1101_HandleTypeDef hcc1101;
-	remoteModule remote  = NewRemoteModule(NICE, CC1101);
-	rfSettings* settings = remote.GetRfSettings(&remote);
+	remoteModule remote;
+	uint8_t packet[NICE_PACKETSIZE];
 
-	CC1101_Init(&hcc1101, &hspi2, *settings);
+	InitRemoteModule(&remote, NICE, CC1101);
+	rfSettings* settings = remote.GetRfSettings(&remote);
+	CC1101_Init(&hcc1101, &hspi2, settings);
 	S_FREE(settings);
 
 	while (1)
 	{
-		uint8_t packet[NICE_PACKETSIZE];
 		remote.AutoGeneratePacket(&remote, ID, packet, sizeof(packet));
+		__BKPT();
+
 		hcc1101.SendPacket(&hcc1101, packet, NICE_PACKETSIZE);
 		HAL_Delay(15);
 	}

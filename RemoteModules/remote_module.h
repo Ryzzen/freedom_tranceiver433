@@ -35,7 +35,7 @@ typedef struct remoteModule_s {
 
 typedef void (*remoteModuleFactory)(remoteModule*, tranceivers);
 
-remoteModule NewRemoteModule(remoteModuleType, tranceivers);
+void InitRemoteModule(remoteModule*, remoteModuleType, tranceivers);
 
 #ifdef __cplusplus
 }

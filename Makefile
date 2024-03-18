@@ -40,8 +40,9 @@ C_SOURCES =  \
 			 Core/Src/syscalls.c \
 			 Core/Src/dwt_delay.c \
 			 Drivers/CC1101/Src/cc1101.c \
-			 KeyModules/Nice/Src/nice.c \
-			 KeyModules/Nice/Src/nice_rf.c \
+			 RemoteModules/Nice/Src/nice.c \
+			 RemoteModules/Nice/Src/nice_rf.c \
+			 RemoteModules/remote_module.c \
 			 Core/Src/stm32f1xx_it.c \
 			 Core/Src/stm32f1xx_hal_msp.c \
 			 USB_DEVICE/App/usb_device.c \
@@ -126,6 +127,8 @@ AS_INCLUDES =
 
 # C includes
 C_INCLUDES =  \
+			  -IRemoteModules \
+			  -IRemoteModules/Nice/Inc \
 			  -IUSB_DEVICE/App \
 			  -IUSB_DEVICE/Target \
 			  -ICore/Inc \
@@ -136,8 +139,6 @@ C_INCLUDES =  \
 			  -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
 			  -IDrivers/CMSIS/Include \
 			  -IDrivers/CC1101/Inc \
-			  -IKeyModules \
-			  -IKeyModules/Nice/Inc \
 
 
 # compile gcc flags

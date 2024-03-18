@@ -44,29 +44,17 @@ int main(void)
 	MX_SPI2_Init();
 	MX_USB_DEVICE_Init();
 
-	uint32_t module_nb = NICE;
-	keyModule *key = KeyModule(module_nb);
-	rfSettings* settings = key->GetRfSettings(&nice);
 	CC1101_HandleTypeDef hcc1101;
+	remoteModule remote  = NewRemoteModule(NICE, CC1101);
+	rfSettings* settings = remote.GetRfSettings(&remote);
+
 	CC1101_Init(&hcc1101, &hspi2, *settings);
-	free(settings);
-
-
-	niceModule nice;
-	Nice_Init(&nice, CC1101, 0, 3);
-
-	rfSettings* settings = nice.GetRfSettings(&nice);
-	CC1101_HandleTypeDef hcc1101;
-	CC1101_Init(&hcc1101, &hspi2, *settings);
-	free(settings);
-
-	// keyModule module = GetModules(nb);
-	// module.Init();
-	// module.Bruteforce();
+	S_FREE(settings);
 
 	while (1)
 	{
-		uint8_t* packet = nice.Bruteforce(&nice, ID);
+		uint8_t packet[NICE_PACKETSIZE];
+		remote.AutoGeneratePacket(&remote, ID, packet, sizeof(packet));
 		hcc1101.SendPacket(&hcc1101, packet, NICE_PACKETSIZE);
 		HAL_Delay(15);
 	}

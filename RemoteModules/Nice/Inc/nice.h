@@ -8,7 +8,7 @@ extern "C" {
 #include <stdint.h>
 #include "stm32f1xx_hal.h"
 
-#include "key_module.h"
+#include "remote_module.h"
 
 #define NICE_PACKETSIZE 5
 #define NICE_MAX_ID 1024
@@ -24,20 +24,20 @@ extern "C" {
 
 /* TODO: make the PWM encoding it's own utility */
 
+typedef enum niceField_e {
+	ID,
+	CHANNEL
+} niceField;
+
 typedef struct niceModule_s {
-	niceTranceivers tranceiver;
+	tranceivers tranceiver;
 	uint16_t id;
 	uint8_t channel;
-
-	void* (*GetRfSettings)(niceModule*);
-	void* (*Bruteforce)(niceModule*, uint32_t field);
 } niceModule;
 
 
-static void* Nice_Bruteforce(void* _this, uint32_t field)
-static void* Nice_GetRfSettings(niceModule* this);
-
-void Nice_Init(niceModule* this, Tranceivers tranceiver, uint16_t id, uint8_t channel)
+void Nice_New(remoteModule*, tranceivers);
+void* Nice_GetRfSettings(remoteModule*);
 
 #ifdef __cplusplus
 }

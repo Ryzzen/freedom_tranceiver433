@@ -62,9 +62,13 @@ static void* Nice_CC1101RfSettings()
 	return (void*)(settings);
 }
 
-static void*(*factory[TRANCEIVER_MAX])() = { Nice_CC1101RfSettings };
-
-void* Nice_GetRfSettings(niceModule* this)
+void* Nice_GetRfSettings(remoteModule* super)
 {
+	CHECK_OBJ NULL;
+
+	static void*(*factory[TRANCEIVER_MAX])() = { Nice_CC1101RfSettings };
+
+	niceModule* this = (niceModule*)(super->this);
+	
 	return factory[this->tranceiver]();	
 }

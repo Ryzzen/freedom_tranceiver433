@@ -112,6 +112,7 @@ static void CC1101_ConfUpdate(CC1101_HandleTypeDef* this)
 	CC1101_WriteReg(this, CC1101_TEST0, &this->settings.test0, 1);
 }
 
+// Manual reset routine as define in the documentation
 static void CC1101_Reset(CC1101_HandleTypeDef* this)
 {
 	if (!this) { return; }
@@ -148,8 +149,8 @@ void CC1101_Init(CC1101_HandleTypeDef* this, SPI_HandleTypeDef* hspi, rfSettings
 {
 	if (!this || !hspi) { return; }
 
-	this->hspi = hspi;
-	this->settings = settings;
+	this->hspi       = hspi;
+	this->settings   = settings;
 	this->SendPacket = CC1101_SendPacket;
 
 	uint8_t version;

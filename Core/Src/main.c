@@ -55,9 +55,8 @@ int main(void)
 
 	while (1)
 	{
-		remote.AutoGeneratePacket(&remote, ID, packet, sizeof(packet));
-		__BKPT();
-
+		uint8_t data[2] = {0b101, 10};
+		remote.GeneratePacket(&remote, data, sizeof(data), packet, sizeof(packet));
 		hcc1101.SendPacket(&hcc1101, packet, NICE_PACKETSIZE);
 		HAL_Delay(15);
 	}

@@ -53,21 +53,24 @@ static void Nice_MakePacket(niceModule* this, uint8_t* packet)
 		packet[i] = data_encode[i];
 }
 
-static void Nice_AutoGeneratePacket(remoteModule* super, uint32_t field, uint8_t* packet, size_t size)
+static uint32_t Nice_AutoGeneratePacket(remoteModule* super, uint32_t field, uint8_t* packet, size_t size)
 {
-	CHECK_OBJ;
-	if (size < NICE_PACKETSIZE);
+	CHECK_OBJ 0;
+	if (size < NICE_PACKETSIZE) return 0;
 
 	niceModule* this = (niceModule*)(super->this);
+	uint32_t ret     = 0;
 
 	if (field == ID) {
 		this->packet.id = (this->packet.id + 1) % NICE_MAX_ID;
+		ret = this->packet.id;
 	} else if (field == CHANNEL) {
 		this->packet.channel = (this->packet.channel + 1) % NICE_MAX_CHANNEL;
+		ret = this->packet.channel;
 	}
 
 	Nice_MakePacket(this, packet);
-	return;
+	return ret;
 }
 
 static void Nice_GeneratePacket(remoteModule* super, void* _packet_src, uint8_t* packet, size_t size)

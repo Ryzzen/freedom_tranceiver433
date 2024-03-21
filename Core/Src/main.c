@@ -52,12 +52,12 @@ int main(void)
 	CC1101_Init(&hcc1101, &hspi2, settings);
 	S_FREE(settings);
 
-	nicePacket nice_packet = {0b0100011101, 0b10};
+	nicePacket nice_packet = {0b0100011101, 2};
 	uint8_t packet[NICE_PACKETSIZE];
 	remote.SetPacket(&remote, &nice_packet);
 	while (1)
 	{
-		remote.GeneratePacket(&remote, NULL, packet, sizeof(packet));
+		remote.AutoGeneratePacket(&remote, CHANNEL, packet, sizeof(packet));
 		hcc1101.SendPacket(&hcc1101, packet, NICE_PACKETSIZE);
 		HAL_Delay(15);
 	}
@@ -69,8 +69,8 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+	RCC_OscInitTypeDef RCC_OscInitStruct   = {0};
+	RCC_ClkInitTypeDef RCC_ClkInitStruct   = {0};
 	RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
 	/** Initializes the RCC Oscillators according to the specified parameters

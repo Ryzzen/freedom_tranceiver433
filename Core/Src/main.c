@@ -46,17 +46,18 @@ int main(void)
 
 	CC1101_HandleTypeDef hcc1101;
 	remoteModule remote;
-	uint8_t packet[NICE_PACKETSIZE];
 
 	InitRemoteModule(&remote, NICE, CC1101);
 	rfSettings* settings = remote.GetRfSettings(&remote);
 	CC1101_Init(&hcc1101, &hspi2, settings);
 	S_FREE(settings);
 
+	nicePacket nice_packet = {0b0100011101, 0b10};
+	uint8_t packet[NICE_PACKETSIZE];
+	remote.SetPacket(&remote, &nice_packet);
 	while (1)
 	{
-		uint8_t data[2] = {0b101, 10};
-		remote.GeneratePacket(&remote, data, sizeof(data), packet, sizeof(packet));
+		remote.GeneratePacket(&remote, NULL, packet, sizeof(packet));
 		hcc1101.SendPacket(&hcc1101, packet, NICE_PACKETSIZE);
 		HAL_Delay(15);
 	}

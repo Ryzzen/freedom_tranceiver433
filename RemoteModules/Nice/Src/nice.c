@@ -43,7 +43,7 @@ static void Nice_ReformatPacket(uint8_t* pwm_data)
 static void Nice_MakePacket(niceModule* this, uint8_t* packet)
 {
 	uint8_t data_encode[NICE_PACKETSIZE] = {0};
-	uint16_t data_tmp                    = ((this->id & 1023) << 2) | (this->channel & 0b11);
+	uint16_t data_tmp                    = ((this->packet.id & 1023) << 2) | (this->packet.channel & 0b11);
 	uint8_t data[2]                      = { data_tmp >> 4, (data_tmp & 0b1111) << 4 };
 
 	PWM_Encode(data, data_encode, 2);
@@ -53,35 +53,51 @@ static void Nice_MakePacket(niceModule* this, uint8_t* packet)
 		packet[i] = data_encode[i];
 }
 
-static void* Nice_AutoGeneratePacket(remoteModule* super, uint32_t field, uint8_t* packet, size_t size)
+static void Nice_AutoGeneratePacket(remoteModule* super, uint32_t field, uint8_t* packet, size_t size)
 {
-	CHECK_OBJ NULL;
-	if (size < NICE_PACKETSIZE) return NULL;
+	CHECK_OBJ;
+	if (size < NICE_PACKETSIZE);
 
 	niceModule* this = (niceModule*)(super->this);
 
 	if (field == ID) {
-		this->id = (this->id + 1) % NICE_MAX_ID;
+		this->packet.id = (this->packet.id + 1) % NICE_MAX_ID;
 	} else if (field == CHANNEL) {
-		this->channel = (this->channel + 1) % NICE_MAX_CHANNEL;
+		this->packet.channel = (this->packet.channel + 1) % NICE_MAX_CHANNEL;
 	}
 
 	Nice_MakePacket(this, packet);
-	return packet;
+	return;
 }
 
-static void* Nice_GeneratePacket(remoteModule* super, uint8_t* packet_fields,  size_t packet_fields_size, uint8_t* packet, size_t size)
+static void Nice_GeneratePacket(remoteModule* super, void* _packet_src, uint8_t* packet, size_t size)
 {
-	CHECK_OBJ NULL;
-	if ((packet_fields_size < 2) || (size < NICE_PACKETSIZE)) return NULL;
+	CHECK_OBJ;
+	if (size < NICE_PACKETSIZE) return;
 
 	niceModule* this = (niceModule*)(super->this);
 
-	this->id         = packet_fields[0];
-	this->channel    = packet_fields[1];
+	if (_packet_src) {
+		nicePacket* packet_src = (nicePacket*)(_packet_src);
+		this->packet           = *packet_src;
+	}
 
 	Nice_MakePacket(this, packet);
-	return packet;
+	return;
+}
+
+static void Nice_SetPacket(remoteModule* super, void* _packet)
+{
+	CHECK_OBJ;
+	if (!_packet) return;
+
+	niceModule* this       = (niceModule*)(super->this);
+	nicePacket* packet = (nicePacket*)(_packet);
+	
+	this->packet.id      = packet->id;
+	this->packet.channel = packet->channel;
+
+	return;
 }
 
 static void Nice_Destructor(remoteModule* super) {
@@ -95,11 +111,12 @@ void Nice_Init(remoteModule* super, tranceivers tranceiver)
 	niceModule* this          = malloc(sizeof(niceModule));
 
 	this->tranceiver          = tranceiver;
-	this->id                  = 0;
-	this->channel             = 0;
+	this->packet.id           = 0;
+	this->packet.channel      = 0;
 	super->this               = this;
 	super->Destructor         = &Nice_Destructor;
 	super->GetRfSettings      = &Nice_GetRfSettings;
 	super->AutoGeneratePacket = &Nice_AutoGeneratePacket;
 	super->GeneratePacket     = &Nice_GeneratePacket;
+	super->SetPacket          = &Nice_SetPacket;
 }

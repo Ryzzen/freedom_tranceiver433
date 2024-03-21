@@ -27,8 +27,9 @@ typedef enum tranceivers_e {
 typedef struct remoteModule_s {
 	void	(*Destructor)(struct remoteModule_s*);
 	void*	(*GetRfSettings)(struct remoteModule_s*);
-	void*	(*AutoGeneratePacket)(struct remoteModule_s*, uint32_t, uint8_t*, size_t);
-	void*	(*GeneratePacket)(struct remoteModule_s*, uint8_t*,  size_t, uint8_t*, size_t);
+	void	(*AutoGeneratePacket)(struct remoteModule_s*, uint32_t, uint8_t*, size_t);
+	void	(*GeneratePacket)(struct remoteModule_s*, void*, uint8_t*, size_t);
+	void	(*SetPacket)(struct remoteModule_s*, void*);
 
 	void	*this;
 } remoteModule;

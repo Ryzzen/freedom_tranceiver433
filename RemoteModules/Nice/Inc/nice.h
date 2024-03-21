@@ -29,10 +29,14 @@ typedef enum niceField_e {
 	CHANNEL
 } niceField;
 
-typedef struct niceModule_s {
-	tranceivers tranceiver;
+typedef struct nicePacket_s {
 	uint16_t id;
 	uint8_t channel;
+} nicePacket;
+
+typedef struct niceModule_s {
+	tranceivers tranceiver;
+	nicePacket packet;
 } niceModule;
 
 

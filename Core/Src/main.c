@@ -19,6 +19,7 @@
 #include "main.h"
 #include "usb_device.h"
 #include "cc1101.h"
+#include "remote_module.h"
 #include "nice.h"
 
 /* Private variables ---------------------------------------------------------*/
@@ -76,13 +77,13 @@ void SystemClock_Config(void)
 	/** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-	RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+	RCC_OscInitStruct.OscillatorType           = RCC_OSCILLATORTYPE_HSE;
+	RCC_OscInitStruct.HSEState                 = RCC_HSE_ON;
+	RCC_OscInitStruct.HSEPredivValue           = RCC_HSE_PREDIV_DIV1;
+	RCC_OscInitStruct.HSIState                 = RCC_HSI_ON;
+	RCC_OscInitStruct.PLL.PLLState             = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource            = RCC_PLLSOURCE_HSE;
+	RCC_OscInitStruct.PLL.PLLMUL               = RCC_PLL_MUL9;
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
 	{
 		Error_Handler();
@@ -90,10 +91,10 @@ void SystemClock_Config(void)
 
 	/** Initializes the CPU, AHB and APB buses clocks
   */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+	RCC_ClkInitStruct.ClockType      = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
 		|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
 	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
@@ -101,8 +102,10 @@ void SystemClock_Config(void)
 	{
 		Error_Handler();
 	}
+
 	PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
-	PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
+	PeriphClkInit.UsbClockSelection    = RCC_USBCLKSOURCE_PLL_DIV1_5;
+
 	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
 	{
 		Error_Handler();
@@ -117,18 +120,19 @@ void SystemClock_Config(void)
 static void MX_SPI2_Init(void)
 {
 	/* SPI2 parameter configuration*/
-	hspi2.Instance = SPI2;
-	hspi2.Init.Mode = SPI_MODE_MASTER;
-	hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-	hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-	hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-	hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-	hspi2.Init.NSS = SPI_NSS_SOFT;
+	hspi2.Instance               = SPI2;
+	hspi2.Init.Mode              = SPI_MODE_MASTER;
+	hspi2.Init.Direction         = SPI_DIRECTION_2LINES;
+	hspi2.Init.DataSize          = SPI_DATASIZE_8BIT;
+	hspi2.Init.CLKPolarity       = SPI_POLARITY_LOW;
+	hspi2.Init.CLKPhase          = SPI_PHASE_1EDGE;
+	hspi2.Init.NSS               = SPI_NSS_SOFT;
 	hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
-	hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-	hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-	hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-	hspi2.Init.CRCPolynomial = 10;
+	hspi2.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+	hspi2.Init.TIMode            = SPI_TIMODE_DISABLE;
+	hspi2.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
+	hspi2.Init.CRCPolynomial     = 10;
+
 	if (HAL_SPI_Init(&hspi2) != HAL_OK)
 	{
 		Error_Handler();
@@ -150,8 +154,8 @@ static void MX_GPIO_Init(void)
 	/* PB12 Enable in output mode */
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	GPIO_InitStruct.Pin = GPIO_PIN_12;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pin   = GPIO_PIN_12;
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);

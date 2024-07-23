@@ -20,6 +20,8 @@
 #include "cc1101.h"
 #include "nice.h"
 #include "usb_device.h"
+#include <stdint.h>
+#include <string.h>
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi2;
@@ -51,12 +53,17 @@ int main(void) {
   CC1101_Init(&hcc1101, &hspi2, settings);
   S_FREE(settings);
 
+  niceModule *nice = (niceModule *)(remote.this);
+  /* nice->id = 0b0100011101; */
+  nice->channel = 2;
+
+  uint32_t data[2] = {0b0100011101, 2};
   while (1) {
     remote.AutoGeneratePacket(&remote, ID, packet, sizeof(packet));
-    __BKPT();
+    /* remote.GeneratePacket(&remote, data, 2, packet, sizeof(packet)); */
 
-    hcc1101.SendPacket(&hcc1101, packet, NICE_PACKETSIZE);
-    HAL_Delay(15);
+    for (uint32_t i = 0; i < 20; i++)
+      hcc1101.SendPacket(&hcc1101, packet, NICE_PACKETSIZE);
   }
 }
 

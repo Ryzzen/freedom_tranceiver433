@@ -1,6 +1,6 @@
-# Partie 2 : Développement d'un bruteforceur de clé de garage
+# Partie 2: Developpement d'un bruteforceur de cle de garage
 
-## 1. Le matériel
+## 1. Le materiel
 
 Bruteforcer une clé de garage équivaut à créer sa propre télécommande de portail.
 Pour ce faire, il faut pouvoir émettre un message par radio, ce qui nécessite une antenne et une baseband pour la piloter.
@@ -61,13 +61,13 @@ Pour resumer:
 | ------- | ----------------- | ----------------- | --------- | ----------- |
 | NeoVim  | arm-none-eabi-gcc | arm-none-eabi-gdb | OpenOCD   | STM32CubeMX |
 
-## 3. Développement
+## 3. Developpement
 
 ### Comment interagir avec un microcontrôleur ?
 
 Pour les novices, voici un résumé succinct des concepts essentiels à connaître pour comprendre comment interagir avec un microcontrôleur.
 
-#### Memory-mapped I/O
+#### Memory mapped I/O
 
 La plupart des interactions se font à travers les registres du microcontrôleur, accessibles par ce que l'on appelle le "memory-mapped I/O".
 Chaque fonctionnalité matérielle du microcontrôleur est associée à un ou plusieurs registres, chacun ayant une adresse spécifique.
@@ -188,7 +188,7 @@ Tout cela peut être fait manuellement, et il est même préférable de le faire
 Cependant, pour un simple prototype, nous pouvons utiliser un outil proposé par le constructeur du microcontrôleur : STM32CubeMX.
 Cet outil facilite également l'importation des définitions CMSIS et des bibliothèques fournies par STMicroelectronics.
 
-#### Initialisation avec STM32CubeMX
+#### Initialisation via STM32CubeMX
 
 Pour résumer ce que nous avons besoin que STM32CubeMX génère :
 
@@ -234,14 +234,12 @@ Pour écrire ce pilote, je m'appuie sur trois documents de Texas Instruments :
 - Manuel utilisateur : [CC1101 Module Manual](https://www.elechouse.com/elechouse/images/product/CC1101%20Wirless%20Data%20Transmittion%20Module/CC1101%20Module%20Manual.pdf)
 - Design Note DN503 : [Design Note DN503](https://www.ti.com/lit/an/swra112b/swra112b.pdf?ts=1720967225792)
 
-Presque tous les capteurs ou composants de ce type fonctionnent de la même manière que notre microcontrôleur.
-Ils possèdent des registres qui permettent de configurer leurs fonctionnalités matérielles et de les appeler.
-Dans notre cas, ces registres sont accessibles via un bus série SPI.
+Quasiment tous les capteurs ou composants de ce type fonctionne de la meme maniere que notre microcontroleur. Ils possedents des registres qui permettent de configurer leur fonctionnalites hardware et de les appeles.
+Dans notre cas, ces registres nous sont interfacable via un bus serie SPI.
 
-#### Définitions
+#### Definitions
 
-Pour trouver les adresses de ces registres, il est possible de les extraire de la documentation principale.
-Cependant, un exemple en C est déjà fourni dans le manuel utilisateur.
+Pour trouver les addresses de ces registres, il est possible de les extraires de la documentation principale. Cependant, un exemple en C est deja present dans le manuel utilisateur.
 
 ```c
 #define CC1101_IOCFG2 0x00 // GDO2 output pin configuration
@@ -337,9 +335,9 @@ Cependant, un exemple en C est déjà fourni dans le manuel utilisateur.
 #define CC1101_MOD_MSK 0x07
 ```
 
-Notre driver devra initialiser le CC1101 avec une configuration donnée et fournir une abstraction permettant l'écriture de paquets.
+Notre driver va devoir initialiser le CC1101 avec une configuration donne et donner une abstraction permettant l'ecriture de paquets.
 
-On peut encapsuler cela dans une structure simple, qui mémorise l'interface SPI liée à notre CC1101 et expose notre abstraction pour l'écriture de paquets.
+On peu encapsuler cela dans une structure simple, qui garde en memoire l'interface SPI liee a notre CC1101, et exposant notre abstraction d'ecriture de paquet.
 
 ```c
 typedef struct CC1101_Handle_s {
@@ -351,15 +349,14 @@ typedef struct CC1101_Handle_s {
 void CC1101_Init(CC1101_HandleTypeDef* this, SPI_HandleTypeDef* hspi, rfSettings* settings);
 ```
 
-Le protocole pour écrire sur un registre est décrit dans la Design Note 503.
+Le protocole pour ecrire sur un registre est decris dans la Design Note 503.
 
 ![SPI Access](./images/spi_access.png)
 
-Ce protocole est assez simple.
-Il est spécifié que l'on doit commencer par envoyer un en-tête comprenant un bit indiquant l'action de lecture ou d'écriture, suivi d'un second bit spécifiant le mode de transfert : soit un mode octet par octet, soit un mode burst.
-L'adresse du registre suit cet en-tête. Ensuite, on peut lire les données reçues en cas de lecture ou écrire nos données en cas d'écriture.
+Ce protocole est assez simple, il nous ai specifie de commencer par envoyer un header comprenant un bit specifiant l'action de lecture ou d'ecriture, suivi d'un second bit specifiant le mode d'envoi ou du lecture: soit un mode octet par octet, soit un mode burst.
+On retrouve ensuite l'addresse du registre, qui vient conclure le header. On peu ensuite lire la donnee recus en cas de lecture, ou ecrire notre donnee en cas d'ecriture.
 
-Pour créer ces en-têtes, nous pouvons donc définir les macros suivantes :
+Pour faire ces headers, on peu donc en deduire les macros suivantes:
 
 ```c
 #define CC1101_WRITE(addr) (addr)
@@ -368,14 +365,13 @@ Pour créer ces en-têtes, nous pouvons donc définir les macros suivantes :
 #define CC1101_READ_BURST(addr) (addr | 0xC0)
 ```
 
-#### Lecture/écriture des registres
+#### Lecture / ecriture des registres
 
-On constate qu'en plus de la possibilité d'écrire dans les registres, il est également possible d'envoyer des commandes appelées "Strobes" pour demander au CC1101 d'effectuer certaines actions.
-Il est précisé que seule l'adresse de la commande doit être communiquée, sans autres données supplémentaires.
+On voit qu'en plus de pouvoir ecrire dans des registres, il est aussi possible d'envoyer des comandes notes Strobes, capables de demander au CC1101 d'effectuer certaines actions, il est decris que seul l'addresses de la commande est a communiquer, rien de plus.
 
 ![Command Strobes](./images/cmds.png)
 
-Ensuite, il n'y a rien de plus simple : il suffit de suivre le protocole.
+Ensuite rien de plus simple, on ne fait que suivre le protocole.
 
 ```c
 static HAL_StatusTypeDef CC1101_WriteReg(CC1101_HandleTypeDef* this, uint8_t address, uint8_t* data, size_t size)
@@ -402,10 +398,9 @@ static HAL_StatusTypeDef CC1101_WriteReg(CC1101_HandleTypeDef* this, uint8_t add
 }
 ```
 
-Dans mon cas, le mode d'accès octet par octet ne semblait pas fonctionner, probablement en raison d'une erreur de ma part.
-Toutefois, ce n'est pas très préoccupant, car le mode burst fonctionne. Je vais donc utiliser exclusivement ce dernier.
+Dans mon cas, le mode d'acces octet par octet ne semblait pas fonctionner, j'ai certainement fait une erreur quelque part, ce n'est cependant pas tres important, car le mode burst fonctionne, lui, tres bien. Je me sert donc ici exclusivement de ce dernier.
 
-Pour la lecture des registres, on suit le même protocole.
+Pour la lecture de registre, on suit le meme protocole.
 
 ```c
 static HAL_StatusTypeDef CC1101_ReadReg(CC1101_HandleTypeDef* this, uint8_t address, uint8_t* buf, size_t size)
@@ -430,14 +425,14 @@ static HAL_StatusTypeDef CC1101_ReadReg(CC1101_HandleTypeDef* this, uint8_t addr
 }
 ```
 
-Pour vérifier que la communication avec le CC1101 fonctionne correctement, il suffit de tenter de lire un registre dont la valeur est fixe et connue à l'avance, souvent un numéro de version ou de révision.
-Une recherche du terme "version" dans la documentation principale donne le résultat suivant :
+Pour verifier que la communication avec le CC1101 fonctionne correctement, il suffit de chercher a lire un registre dont la valeure est fix et connue a l'avance, souvent un numero de version ou de revision.
+Une recherche sur le mot version dans la documentation principale donne le resultat suivant:
 
 ![Version Register](./images/version1.png)
 
 ![Version Value](./images/version2.png)
 
-Il existe un registre contenant la version du CC1101, et sa valeur doit être égale à 0x14.
+Un regsitre contenant la version du CC1101 existe, et sa valeure doit etre egale 0x14.
 
 ```c
 uint8_t version;
@@ -445,14 +440,13 @@ uint8_t version;
 CC1101_ReadReg(this, CC1101_VERSION, &version, 1);
 ```
 
-Nous vérifions d'abord que nous obtenons le résultat correct pour valider la partie lecture.
-Ensuite, nous lisons un registre modifiable, changeons sa valeur, puis le relisons pour confirmer que l'écriture a été correctement effectuée.
+On verifie avoir le bon resultat pour valider la partie lecture, puis on lis un registre sur lequel on peu ecrire, on change sa valeure on le lis de nouveau pour valider la partie ecriture.
 
 #### Routine de configuration
 
-Ensuite, nous en profitons pour définir une routine de configuration des registres de paramétrage du CC1101.
+Ensuite, on en profite pour definir une routine de configuration des registres de paramettrage du C1101.
 
-Nous commençons par définir la structure qui sera remplie lors de l'initialisation de notre pilote.
+On commence par definir la structure qui sera a remplir lors de l'instanciation de notre driver.
 
 ```c
 typedef struct rfSettings_s {
@@ -507,7 +501,7 @@ typedef struct rfSettings_s {
 } rfSettings;
 ```
 
-Ensuite, nous définissons la routine de mise à jour.
+Puis la routine d'update.
 
 ```c
 static HAL_StatusTypeDef CC1101_ConfUpdate(CC1101_HandleTypeDef *this,
@@ -570,7 +564,7 @@ static HAL_StatusTypeDef CC1101_ConfUpdate(CC1101_HandleTypeDef *this,
 }
 ```
 
-#### Envoi de paquets avec le CC1101
+#### Envoi de paquets par le CC1101
 
 La documentation decris le schema de fonctionnement suivant:
 

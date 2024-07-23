@@ -5,77 +5,80 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include "stm32f1xx_hal.h"
+#include <stdint.h>
 
 #define CC1101_SPI_DELAY 100
-
 
 #define SPI_SELECT HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
 #define SPI_DESELECT HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
 
 // CC2500/CC1100 STROBE, CONTROL AND STATUS REGSITER
-#define CC1101_IOCFG2 0x00 // GDO2 output pin configuration
-#define CC1101_IOCFG1 0x01 // GDO1 output pin configuration
-#define CC1101_IOCFG0 0x02 // GDO0 output pin configuration
-#define CC1101_FIFOTHR 0x03 // RX FIFO and TX FIFO thresholds
-#define CC1101_SYNC1 0x04 // Sync word, high uint8_t_t
-#define CC1101_SYNC0 0x05 // Sync word, low uint8_t_t
-#define CC1101_PKTLEN 0x06 // Packet length
+#define CC1101_IOCFG2 0x00   // GDO2 output pin configuration
+#define CC1101_IOCFG1 0x01   // GDO1 output pin configuration
+#define CC1101_IOCFG0 0x02   // GDO0 output pin configuration
+#define CC1101_FIFOTHR 0x03  // RX FIFO and TX FIFO thresholds
+#define CC1101_SYNC1 0x04    // Sync word, high uint8_t_t
+#define CC1101_SYNC0 0x05    // Sync word, low uint8_t_t
+#define CC1101_PKTLEN 0x06   // Packet length
 #define CC1101_PKTCTRL1 0x07 // Packet automation control
 #define CC1101_PKTCTRL0 0x08 // Packet automation control
-#define CC1101_ADDR 0x09 // Device address
-#define CC1101_CHANNR 0x0A // Channel number
-#define CC1101_FSCTRL1 0x0B // Frequency synthesizer control
-#define CC1101_FSCTRL0 0x0C // Frequency synthesizer control
-#define CC1101_FREQ2 0x0D // Frequency control word, high uint8_t_t
-#define CC1101_FREQ1 0x0E // Frequency control word, middle uint8_t_t
-#define CC1101_FREQ0 0x0F // Frequency control word, low uint8_t_t
-#define CC1101_MDMCFG4 0x10 // Modem configuration
-#define CC1101_MDMCFG3 0x11 // Modem configuration
-#define CC1101_MDMCFG2 0x12 // Modem configuration
-#define CC1101_MDMCFG1 0x13 // Modem configuration
-#define CC1101_MDMCFG0 0x14 // Modem configuration
-#define CC1101_DEVIATN 0x15 // Modem deviation setting
-#define CC1101_MCSM2 0x16 // Main Radio Control State Machine configuration
-#define CC1101_MCSM1 0x17 // Main Radio Control State Machine configuration
-#define CC1101_MCSM0 0x18 // Main Radio Control State Machine configuration
-#define CC1101_FOCCFG 0x19 // Frequency Offset Compensation configuration
-#define CC1101_BSCFG 0x1A // Bit Synchronization configuration
+#define CC1101_ADDR 0x09     // Device address
+#define CC1101_CHANNR 0x0A   // Channel number
+#define CC1101_FSCTRL1 0x0B  // Frequency synthesizer control
+#define CC1101_FSCTRL0 0x0C  // Frequency synthesizer control
+#define CC1101_FREQ2 0x0D    // Frequency control word, high uint8_t_t
+#define CC1101_FREQ1 0x0E    // Frequency control word, middle uint8_t_t
+#define CC1101_FREQ0 0x0F    // Frequency control word, low uint8_t_t
+#define CC1101_MDMCFG4 0x10  // Modem configuration
+#define CC1101_MDMCFG3 0x11  // Modem configuration
+#define CC1101_MDMCFG2 0x12  // Modem configuration
+#define CC1101_MDMCFG1 0x13  // Modem configuration
+#define CC1101_MDMCFG0 0x14  // Modem configuration
+#define CC1101_DEVIATN 0x15  // Modem deviation setting
+#define CC1101_MCSM2 0x16    // Main Radio Control State Machine configuration
+#define CC1101_MCSM1 0x17    // Main Radio Control State Machine configuration
+#define CC1101_MCSM0 0x18    // Main Radio Control State Machine configuration
+#define CC1101_FOCCFG 0x19   // Frequency Offset Compensation configuration
+#define CC1101_BSCFG 0x1A    // Bit Synchronization configuration
 #define CC1101_AGCCTRL2 0x1B // AGC control
 #define CC1101_AGCCTRL1 0x1C // AGC control
 #define CC1101_AGCCTRL0 0x1D // AGC control
-#define CC1101_WOREVT1 0x1E // High uint8_t_t Event 0 timeout
-#define CC1101_WOREVT0 0x1F // Low uint8_t_t Event 0 timeout
-#define CC1101_WORCTRL 0x20 // Wake On Radio control
-#define CC1101_FREND1 0x21 // Front end RX configuration
-#define CC1101_FREND0 0x22 // Front end TX configuration
-#define CC1101_FSCAL3 0x23 // Frequency synthesizer calibration
-#define CC1101_FSCAL2 0x24 // Frequency synthesizer calibration
-#define CC1101_FSCAL1 0x25 // Frequency synthesizer calibration
-#define CC1101_FSCAL0 0x26 // Frequency synthesizer calibration
-#define CC1101_RCCTRL1 0x27 // RC oscillator configuration
-#define CC1101_RCCTRL0 0x28 // RC oscillator configuration
-#define CC1101_FSTEST 0x29 // Frequency synthesizer calibration control
-#define CC1101_PTEST 0x2A // Production test
-#define CC1101_AGCTEST 0x2B // AGC test
-#define CC1101_TEST2 0x2C // Various test settings
-#define CC1101_TEST1 0x2D // Various test settings
-#define CC1101_TEST0 0x2E // Various test settings
+#define CC1101_WOREVT1 0x1E  // High uint8_t_t Event 0 timeout
+#define CC1101_WOREVT0 0x1F  // Low uint8_t_t Event 0 timeout
+#define CC1101_WORCTRL 0x20  // Wake On Radio control
+#define CC1101_FREND1 0x21   // Front end RX configuration
+#define CC1101_FREND0 0x22   // Front end TX configuration
+#define CC1101_FSCAL3 0x23   // Frequency synthesizer calibration
+#define CC1101_FSCAL2 0x24   // Frequency synthesizer calibration
+#define CC1101_FSCAL1 0x25   // Frequency synthesizer calibration
+#define CC1101_FSCAL0 0x26   // Frequency synthesizer calibration
+#define CC1101_RCCTRL1 0x27  // RC oscillator configuration
+#define CC1101_RCCTRL0 0x28  // RC oscillator configuration
+#define CC1101_FSTEST 0x29   // Frequency synthesizer calibration control
+#define CC1101_PTEST 0x2A    // Production test
+#define CC1101_AGCTEST 0x2B  // AGC test
+#define CC1101_TEST2 0x2C    // Various test settings
+#define CC1101_TEST1 0x2D    // Various test settings
+#define CC1101_TEST0 0x2E    // Various test settings
 // Strobe commands
 #define CC1101_SRES 0x30 // Reset chip.
-#define CC1101_SFSTXON 0x31 // Enable and calibrate frequency synthesizer (if MCSM0.FS_AUTOCAL = 1).
+#define CC1101_SFSTXON                                                         \
+  0x31 // Enable and calibrate frequency synthesizer (if MCSM0.FS_AUTOCAL = 1).
 // If in RX / TX: Go to a wait state where only the synthesizer is
 // Running (for quick RX / TX turnaround).
 #define CC1101_SXOFF 0x32 // Turn off crystal oscillator.
-#define CC1101_SCAL 0x33 // Calibrate frequency synthesizer and turn it off
+#define CC1101_SCAL 0x33  // Calibrate frequency synthesizer and turn it off
 // (Enables quick start).
-#define CC1101_SRX 0x34 // Enable RX. Perform calibration first if coming from IDLE and
+#define CC1101_SRX                                                             \
+  0x34 // Enable RX. Perform calibration first if coming from IDLE and
 // MCSM0.FS_AUTOCAL = 1.
-#define CC1101_STX 0x35 // In IDLE state: Enable TX. Perform calibration first if
+#define CC1101_STX                                                             \
+  0x35 // In IDLE state: Enable TX. Perform calibration first if
 // MCSM0.FS_AUTOCAL = 1. If in RX state and CCA is enabled:
 // Only go to TX if channel is clear.
-#define CC1101_SIDLE 0x36 // Exit RX / TX, turn off frequency synthesizer and exit
+#define CC1101_SIDLE                                                           \
+  0x36 // Exit RX / TX, turn off frequency synthesizer and exit
 // Wake-On-Radio mode if applicable.
 #define CC1101_SAFC 0x37 // Perform AFC adjustment of the frequency synthesizer
 #define CC1101_SWOR 0x38 // Start automatic RX polling sequence (Wake-on-Radio)
@@ -83,7 +86,8 @@ extern "C" {
 #define CC1101_SFRX 0x3A // Flush the RX FIFO buffer.
 #define CC1101_SFTX 0x3B // Flush the TX FIFO buffer.
 #define CC1101_SWORRST 0x3C // Reset real time clock.
-#define CC1101_SNOP 0x3D // No operation. May be used to pad strobe commands to two
+#define CC1101_SNOP                                                            \
+  0x3D // No operation. May be used to pad strobe commands to two
 // uint8_t_ts for simpler software.
 #define CC1101_PARTNUM 0x30
 #define CC1101_VERSION 0x31
@@ -116,65 +120,64 @@ extern "C" {
 
 // RF settings for CC1100
 typedef struct rfSettings_s {
-	uint8_t iocfg2;     // GDO2 Output Pin Configuration
-    uint8_t iocfg1;     // GDO1 Output Pin Configuration
-    uint8_t iocfg0;     // GDO0 Output Pin Configuration
-    uint8_t fifothr;    // RX FIFO and TX FIFO Thresholds
-    uint8_t sync1;      // Sync Word, High Byte
-    uint8_t sync0;      // Sync Word, Low Byte
-    uint8_t pktlen;     // Packet Length
-    uint8_t pktctrl1;   // Packet Automation Control
-    uint8_t pktctrl0;   // Packet Automation Control
-    uint8_t addr;       // Device Address
-    uint8_t channr;     // Channel Number
-    uint8_t fsctrl1;    // Frequency Synthesizer Control
-    uint8_t fsctrl0;    // Frequency Synthesizer Control
-    uint8_t freq2;      // Frequency Control Word, High Byte
-    uint8_t freq1;      // Frequency Control Word, Middle Byte
-    uint8_t freq0;      // Frequency Control Word, Low Byte
-    uint8_t mdmcfg4;    // Modem Configuration
-    uint8_t mdmcfg3;    // Modem Configuration
-    uint8_t mdmcfg2;    // Modem Configuration
-    uint8_t mdmcfg1;    // Modem Configuration
-    uint8_t mdmcfg0;    // Modem Configuration
-    uint8_t deviatn;    // Modem Deviation Setting
-    uint8_t mcsm2;      // Main Radio Control State Machine Configuration
-    uint8_t mcsm1;      // Main Radio Control State Machine Configuration
-    uint8_t mcsm0;      // Main Radio Control State Machine Configuration
-    uint8_t foccfg;     // Frequency Offset Compensation Configuration
-    uint8_t bscfg;      // Bit Synchronization Configuration
-    uint8_t agcctrl2;   // AGC Control
-    uint8_t agcctrl1;   // AGC Control
-    uint8_t agcctrl0;   // AGC Control
-    uint8_t worevt1;    // High Byte Event0 Timeout
-    uint8_t worevt0;    // Low Byte Event0 Timeout
-    uint8_t worctrl;    // Wake On Radio Control
-    uint8_t frend1;     // Front End RX Configuration
-    uint8_t frend0;     // Front End TX Configuration
-    uint8_t fscal3;     // Frequency Synthesizer Calibration
-    uint8_t fscal2;     // Frequency Synthesizer Calibration
-    uint8_t fscal1;     // Frequency Synthesizer Calibration
-    uint8_t fscal0;     // Frequency Synthesizer Calibration
-    uint8_t rcctrl1;    // RC Oscillator Configuration
-    uint8_t rcctrl0;    // RC Oscillator Configuration
-    uint8_t fstest;     // Frequency Synthesizer Calibration Control
-    uint8_t ptest;      // Production Test
-    uint8_t agctest;    // AGC Test
-    uint8_t test2;      // Various Test Settings
-    uint8_t test1;      // Various Test Settings
-    uint8_t test0;      // Various Test Settings
-	uint8_t pa_table[8]; // PA Table
+  uint8_t iocfg2;      // GDO2 Output Pin Configuration
+  uint8_t iocfg1;      // GDO1 Output Pin Configuration
+  uint8_t iocfg0;      // GDO0 Output Pin Configuration
+  uint8_t fifothr;     // RX FIFO and TX FIFO Thresholds
+  uint8_t sync1;       // Sync Word, High Byte
+  uint8_t sync0;       // Sync Word, Low Byte
+  uint8_t pktlen;      // Packet Length
+  uint8_t pktctrl1;    // Packet Automation Control
+  uint8_t pktctrl0;    // Packet Automation Control
+  uint8_t addr;        // Device Address
+  uint8_t channr;      // Channel Number
+  uint8_t fsctrl1;     // Frequency Synthesizer Control
+  uint8_t fsctrl0;     // Frequency Synthesizer Control
+  uint8_t freq2;       // Frequency Control Word, High Byte
+  uint8_t freq1;       // Frequency Control Word, Middle Byte
+  uint8_t freq0;       // Frequency Control Word, Low Byte
+  uint8_t mdmcfg4;     // Modem Configuration
+  uint8_t mdmcfg3;     // Modem Configuration
+  uint8_t mdmcfg2;     // Modem Configuration
+  uint8_t mdmcfg1;     // Modem Configuration
+  uint8_t mdmcfg0;     // Modem Configuration
+  uint8_t deviatn;     // Modem Deviation Setting
+  uint8_t mcsm2;       // Main Radio Control State Machine Configuration
+  uint8_t mcsm1;       // Main Radio Control State Machine Configuration
+  uint8_t mcsm0;       // Main Radio Control State Machine Configuration
+  uint8_t foccfg;      // Frequency Offset Compensation Configuration
+  uint8_t bscfg;       // Bit Synchronization Configuration
+  uint8_t agcctrl2;    // AGC Control
+  uint8_t agcctrl1;    // AGC Control
+  uint8_t agcctrl0;    // AGC Control
+  uint8_t worevt1;     // High Byte Event0 Timeout
+  uint8_t worevt0;     // Low Byte Event0 Timeout
+  uint8_t worctrl;     // Wake On Radio Control
+  uint8_t frend1;      // Front End RX Configuration
+  uint8_t frend0;      // Front End TX Configuration
+  uint8_t fscal3;      // Frequency Synthesizer Calibration
+  uint8_t fscal2;      // Frequency Synthesizer Calibration
+  uint8_t fscal1;      // Frequency Synthesizer Calibration
+  uint8_t fscal0;      // Frequency Synthesizer Calibration
+  uint8_t rcctrl1;     // RC Oscillator Configuration
+  uint8_t rcctrl0;     // RC Oscillator Configuration
+  uint8_t fstest;      // Frequency Synthesizer Calibration Control
+  uint8_t ptest;       // Production Test
+  uint8_t agctest;     // AGC Test
+  uint8_t test2;       // Various Test Settings
+  uint8_t test1;       // Various Test Settings
+  uint8_t test0;       // Various Test Settings
+  uint8_t pa_table[8]; // PA Table
 } rfSettings;
 
 typedef struct CC1101_Handle_s {
-	SPI_HandleTypeDef *hspi;
+  SPI_HandleTypeDef *hspi;
 
-	void (*SendPacket) (struct CC1101_Handle_s*, uint8_t*, uint8_t);
+  HAL_StatusTypeDef (*SendPacket)(struct CC1101_Handle_s *, uint8_t *, uint8_t);
 } CC1101_HandleTypeDef;
 
-
-void CC1101_Init(CC1101_HandleTypeDef* this, SPI_HandleTypeDef* hspi, rfSettings* settings);
-
+HAL_StatusTypeDef CC1101_Init(CC1101_HandleTypeDef *this,
+                              SPI_HandleTypeDef *hspi, rfSettings *settings);
 
 #ifdef __cplusplus
 }

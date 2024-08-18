@@ -572,23 +572,33 @@ static HAL_StatusTypeDef CC1101_ConfUpdate(CC1101_HandleTypeDef *this,
 
 #### Envoi de paquets avec le CC1101
 
-La documentation decris le schema de fonctionnement suivant:
+La documentation décrit le schéma de fonctionnement suivant :
 
 ![State Machine](./images/state_machine.png)
 
-Nous ne nous interessons ici qu'a l'envoi de paquets et non a leur reception, donc ici seul la partie gauche de schema nous interesse.
-Si on simplifi ce schema, on voit que le CC1101 doir etre dans l'etat IDLE pour pouvoir commencer une transmission, pour etre dans cet etat, une commande strobe SIDLE peu etre envoyee.
-Ensuite, une commande strobe STX initie la transmission d'un message. Une fois ce dernier transmis, il place le CC1101 dans un certain nombre d'etats, incluant un etat TX_UNDERFLOW, qui, apres une commande strobe SFTX, remet le CC1101 en etat IDLE, pret a relancer une transmission.
+Nous nous concentrons ici uniquement sur l'envoi de paquets, en laissant de côté leur réception.
+Par conséquent, seule la partie gauche du schéma nous intéresse.
+En simplifiant ce schéma, on observe que le CC1101 doit être en état **IDLE** pour pouvoir initier une transmission.
+Pour atteindre cet état, une commande strobe **SIDLE** peut être envoyée.
+Ensuite, une commande strobe **STX** démarre la transmission d’un message.
+Une fois ce message transmis, le CC1101 passe par plusieurs états, incluant l'état **TX_UNDERFLOW**.
+Après l'envoi de la commande strobe **SFTX**, le buffer est flushé et le CC1101 retourne à l'état **IDLE**, prêt pour une nouvelle transmission.
 
-La documentation explique la commande STX comme etant la commande initialisant un transfert de donnee.
-L'etat TX commence l'evois de donnees stockees depuis un buffer TX_FIFO.
-l'etat TX_UNDERFLOW corresponds a l'evenement nous indiquant qu'il n'y a plus de donnees a transmettre depuis le buffer TX_FIFO.
+Pour resumer, la documentation précise que la commande **STX** est celle qui initialise un transfert de données.
+L'état **TX** correspond à l'envoi de données stockées dans le buffer **TX_FIFO**.
+L'état **TX_UNDERFLOW** signale qu'il n'y a plus de données à transmettre depuis le buffer **TX_FIFO**.
+Enfin, le CC1101 revient en mode **IDLE**.
 
 ![TX_UNDERFLOW](./images/underflow.png)
 
-TODO: Check tx underflow
+Pour interagir avec le buffer **TX_FIFO**, il suffit d’écrire à son adresse via le bus SPI.
 
-#### Routine d'initialisation
+```c
+CC1101_WriteData(CC1101_HandleTypeDef *this,
+                                          uint8_t *data, uint8_t size) {
+  if (!this) {
+    return HAL_ERROR;
+  }
 
 la premiere etape lorsque l'on s'interface avec un composant de ce type, c'est de s'assurer que ces registres soit correctement initialises et que le composant soit dans un etat connu.
 Pour ca il existe souvent des routines de reinitialisation que nous pouvons utiliser.
@@ -596,55 +606,113 @@ Pour ca il existe souvent des routines de reinitialisation que nous pouvons util
 La documentation nous explique qu'un reset est effectuer automatiquement a la mise sous tension du composant. Dans le doute, il est quand meme mieux de d'assurer tout de meme que le composant soit reset avant d'interagire avec.
 La documentation nous fournis la procedure de reinitialisation manuelle suivante:
 
-![Manual CC1101 Reset](./images/manual_reset.png)
+  /* if (status == HAL_OK) */
+  status = CC1101_WriteReg(this, CC1101_TXFIFO, data, size);
+
+  return status;
+}
+```
+
+Pour interagir avec le buffer, il suffit de consulter la liste des commandes strobes.
+
+![STROBES](./images/strobes.png)
+
+On observe que **SFTX** et **SFRX** permettent respectivement de vider les buffers **TX** et **RX**.
+
+Pour vérifier l'état du **CC1101**, la documentation recommande de consulter le registre **MARCSTATE**.
+
+![MARCSTATE](./images/marcstate.png)
+
+Avec cela, nous disposons de tout ce qu'il faut pour envoyer un paquet.
+
+Il suffit de remplir le buffer **RX_FIFO** avec les données, puis de lancer la commande **STX**.
+Ensuite, on attend que le buffer se vide en surveillant le registre **MARCSTATE** pour détecter l'état **TX_FIFO_UNDERFLOW**.
+Enfin, il est essentiel de s'assurer que le buffer soit correctement vidé avant la prochaine écriture.
 
 Pour resumer, nous ne devons rien envoyer sur le bus SPI afin de garder SCLK a l'etat haut et SI a l'etat bas, puis nous devons tirer notre Chip Select bas, puis haut pendans un total de 40us.
 Puis nous devons envoyer une commande "SRES".
 
 ```c
-static void CC1101_Reset(CC1101_HandleTypeDef* this)
-{
-	if (!this) { return; }
+static HAL_StatusTypeDef CC1101_SendPacket(CC1101_HandleTypeDef *this,
+                                           uint8_t *buf, uint8_t size) {
+  if (!this || !buf) {
+    return HAL_ERROR;
+  }
 
-	DWT_Init();
+  uint8_t state = 0;
 
-	SPI_SELECT;
-	DWT_Delay(10);
+  CC1101_WriteData(this, buf, size);
 
-	SPI_DESELECT;
-	DWT_Delay(40 - 10);
+  CC1101_WriteReg(this, CC1101_STX, NULL, 0);
+
+  CC1101_ReadReg(this, CC1101_MARCSTATE, &state, 1);
+  while ((state & 0x1F) != 0x01) // Check for IDLE state
+    CC1101_ReadReg(this, CC1101_MARCSTATE, &state, 1);
 
 	CC1101_WriteReg(this, CC1101_SRES, NULL, 0);
 }
 ```
 
-Le soucis c'est que nous n'avons pas encore implemente de fonction CC1101_WriteReg pour l'instant. Il faut donc commencer par cela. On se contentera donc du reset automatique pour tester cette fonction.
+#### Routine d'initialisation
 
-Une fois valider, on peu finaliser notre routine d'initialisation.
+Enfin, nous définissons une routine d'initialisation pour le **CC1101**.
+
+Dans cette routine, nous allons simplement appeler notre fonction d'initialisation, vérifier que le **CC1101** est en état **IDLE** et que les buffers **TX/RX** sont vides.
+De plus, bien que la documentation indique qu'un reset est effectué automatiquement lors de la mise sous tension du composant, nous allons, par précaution, nous assurer que le composant est bien réinitialisé avant toute interaction.
+
+La documentation fournit la procédure suivante pour une réinitialisation manuelle :
+
+![Manual CC1101 Reset](./images/manual_reset.png)
+
+Pour résumer, il faut ne rien envoyer sur le bus SPI afin de maintenir **SCLK** à l'état haut et **SI** à l'état bas.
+Ensuite, il faut abaisser puis relever le **Chip Select** pendant un total de 40 microsecondes.
+Enfin, il suffit d'envoyer la commande **SRES**.
 
 ```c
-void CC1101_Init(CC1101_HandleTypeDef* this, SPI_HandleTypeDef* hspi, rfSettings* settings)
-{
-	if (!this || !hspi) { return; }
+static HAL_StatusTypeDef CC1101_Reset(CC1101_HandleTypeDef *this) {
+  if (!this)
+    return HAL_ERROR;
 
-	this->hspi       = hspi;
-	this->SendPacket = CC1101_SendPacket;
+  DWT_Init();
 
-	uint8_t version;
+  SPI_SELECT;
+  DWT_Delay(10);
 
-	CC1101_Reset(this);
+  SPI_DESELECT;
+  DWT_Delay(40 - 10);
 
-	CC1101_ReadReg(this, CC1101_VERSION, &version, 1);
-    if (version != 0x14) { return };
+  CC1101_WriteReg(this, CC1101_SRES, NULL, 0);
+  return HAL_OK;
+}
+```
 
-	CC1101_WriteReg(this, CC1101_SIDLE, NULL, 0);
+Il ne reste plus qu'à rédiger la routine elle-même en appliquant tout ce que nous avons couvert jusqu'à présent.
 
-	CC1101_ConfUpdate(this, settings);
-	CC1101_WriteReg(this, CC1101_SFRX, NULL, 0);
-	CC1101_WriteReg(this, CC1101_SFTX, NULL, 0);
+```c
+HAL_StatusTypeDef CC1101_Init(CC1101_HandleTypeDef *this,
+                              SPI_HandleTypeDef *hspi, rfSettings *settings) {
+  if (!this || !hspi)
+    return HAL_ERROR;
 
-	CC1101_WriteReg(this, CC1101_SIDLE, NULL, 0);
+  this->hspi = hspi;
+  this->SendPacket = CC1101_SendPacket;
 
+  uint8_t version;
+
+  CC1101_Reset(this);
+
+  CC1101_ReadReg(this, CC1101_VERSION, &version, 1);
+  if (version != 0x14)
+    return HAL_ERROR;
+
+  CC1101_WriteReg(this, CC1101_SIDLE, NULL, 0);
+
+  CC1101_ConfUpdate(this, settings);
+  CC1101_WriteReg(this, CC1101_SFRX, NULL, 0);
+  CC1101_WriteReg(this, CC1101_SFTX, NULL, 0);
+
+  CC1101_WriteReg(this, CC1101_SIDLE, NULL, 0);
+  return HAL_OK;
 }
 ```
 

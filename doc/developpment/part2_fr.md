@@ -600,11 +600,9 @@ CC1101_WriteData(CC1101_HandleTypeDef *this,
     return HAL_ERROR;
   }
 
-la premiere etape lorsque l'on s'interface avec un composant de ce type, c'est de s'assurer que ces registres soit correctement initialises et que le composant soit dans un etat connu.
-Pour ca il existe souvent des routines de reinitialisation que nous pouvons utiliser.
+  HAL_StatusTypeDef status;
 
-La documentation nous explique qu'un reset est effectuer automatiquement a la mise sous tension du composant. Dans le doute, il est quand meme mieux de d'assurer tout de meme que le composant soit reset avant d'interagire avec.
-La documentation nous fournis la procedure de reinitialisation manuelle suivante:
+  /* status = WriteReg(this, CC1101_TXFIFO, &size, 1); */
 
   /* if (status == HAL_OK) */
   status = CC1101_WriteReg(this, CC1101_TXFIFO, data, size);
@@ -629,8 +627,9 @@ Il suffit de remplir le buffer **RX_FIFO** avec les données, puis de lancer la 
 Ensuite, on attend que le buffer se vide en surveillant le registre **MARCSTATE** pour détecter l'état **TX_FIFO_UNDERFLOW**.
 Enfin, il est essentiel de s'assurer que le buffer soit correctement vidé avant la prochaine écriture.
 
-Pour resumer, nous ne devons rien envoyer sur le bus SPI afin de garder SCLK a l'etat haut et SI a l'etat bas, puis nous devons tirer notre Chip Select bas, puis haut pendans un total de 40us.
-Puis nous devons envoyer une commande "SRES".
+En pratique, le **CC1101** reste en état **TX_FIFO_UNDERFLOW** trop brièvement pour que cet état puisse être lu via le bus SPI.
+En principe, une broche du **CC1101** est dédiée à la détection de cet état, mais je ne l'ai pas connectée à mon microcontrôleur.
+Ce n'est pas un problème majeur, car on peut simplement vérifier l'état suivant, c'est-à-dire l'état **IDLE**, ce qui garantit que tout fonctionne correctement.
 
 ```c
 static HAL_StatusTypeDef CC1101_SendPacket(CC1101_HandleTypeDef *this,
@@ -649,7 +648,9 @@ static HAL_StatusTypeDef CC1101_SendPacket(CC1101_HandleTypeDef *this,
   while ((state & 0x1F) != 0x01) // Check for IDLE state
     CC1101_ReadReg(this, CC1101_MARCSTATE, &state, 1);
 
-	CC1101_WriteReg(this, CC1101_SRES, NULL, 0);
+  CC1101_WriteReg(this, CC1101_SFTX, NULL, 0);
+
+  return HAL_OK;
 }
 ```
 
@@ -721,6 +722,8 @@ Il ne reste ensuite plus qu'a abstraire l'envoi de paquets par le CC1101 pour fa
 write data
 write packet
 
-### TI tool
+La premiere etape est de le configurer correctement.
+Certains ici ont surement crie a l'heresie en voyant que je n'ai pas fourni d'abstraction concernant la configuration du CC1101.
+En effet la fonction de ocnfiguration requiert qe soit fourni l'integralite des registres en paramtres, cependant, n'ayez crainte, il y a une raison derriere tout cela.
 
 ### Bruteforcer

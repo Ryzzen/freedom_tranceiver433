@@ -717,7 +717,7 @@ HAL_StatusTypeDef CC1101_Init(CC1101_HandleTypeDef *this,
 }
 ```
 
-Il ne reste ensuite plus qu'a abstraire l'envoi de paquets par le CC1101 pour faciliter la lecture de code et l'utilisation de notre petit driver.
+Avec tout cela, notre pilote est complet. Il ne reste plus qu'à l'utiliser.
 
 write data
 write packet

@@ -1069,4 +1069,7 @@ Me voici donc chez moi, à 23h30, assis à côté de mon portail pour tester le 
 
 En bonus, le bruteforce du canal m'a permis d'ouvrir le portail de mon garage en sous-sol ainsi que les barrières du parking devant chez moi. :p
 
+On peut constater que ces anciennes télécommandes de garage ne sont pas très sécurisées.
+Heureusement, les télécommandes plus récentes intègrent généralement un code tournant (rolling code) pour compliquer le brute-force. Cependant, bien que ces modèles soient plus sécurisés, ils ne sont pas exempts de vulnérabilités.
+
 J'espère que cet article vous aura appris quelques choses et vous aura donné envie d'explorer davantage ce qu'il est possible de réaliser avec des microcontrôleurs à des prix très abordables !

@@ -173,6 +173,34 @@ Par conséquent, les fréquences des bus ne peuvent être que des valeurs infér
 Chacune de ces valeurs pour les prescalers et PLL, ainsi que l'activation ou la désactivation de chaque horloge, est configurable en modifiant les registres associés, selon le principe du memory-mapped I/O, comme mentionné précédemment.
 Bien que ces valeurs puissent être définies manuellement, nous verrons comment calculer automatiquement ces réglages en fonction d'une fréquence de sortie cible.
 
+#### Bus SPI
+
+Développé par Motorola dans les années 1980, le bus série SPI (Serial Peripheral Interface) est un protocole de communication synchrone utilisé principalement pour échanger des données entre un microcontrôleur et des périphériques tels que des capteurs, mémoires, ou modules de communication.
+
+**Structure et Fonctionnement**
+Le bus SPI est composé de quatre lignes principales :
+
+- MOSI (Master Out Slave In) : Ligne de données où le maître envoie des données au(x) esclave(s).
+- MISO (Master In Slave Out) : Ligne de données où l'esclave envoie des données au maître.
+- SCLK (Serial Clock) : Ligne d'horloge générée par le maître pour synchroniser la communication.
+- SS/CS (Slave Select/Chip Select) : Ligne de sélection du périphérique esclave. Cette ligne est tirée bas pour activer l’esclave spécifique avec lequel le maître souhaite communiquer.
+
+**Modes de Communication**
+Le SPI fonctionne en mode maître-esclave. Le maître contrôle le bus SPI en générant le signal d’horloge et en sélectionnant les esclaves avec lesquels il souhaite communiquer. Un ou plusieurs esclaves peuvent être connectés au même bus, et le maître sélectionne l'esclave actif en tirant la ligne SS/CS de cet esclave à l’état bas.
+
+La communication SPI se fait en full-duplex, ce qui signifie que les données peuvent être envoyées et reçues simultanément.
+À chaque cycle d'horloge, un bit est transmis du maître à l'esclave sur la ligne MOSI, et simultanément, un bit est transmis de l'esclave au maître sur la ligne MISO.
+La synchronisation des données est contrôlée par l'horloge SCLK, et le nombre de bits à transmettre est généralement un multiple de 8 (octet).
+
+**Configuration des Modes SPI**
+Le SPI dispose de quatre modes de communication, définis par deux paramètres :
+
+CPOL (Clock Polarity) : Détermine l'état de repos de l'horloge (bas ou haut).
+CPHA (Clock Phase) : Détermine à quel front d'horloge (montant ou descendant) les données sont échantillonnées.
+Les quatre combinaisons possibles de CPOL et CPHA sont les modes SPI 0, 1, 2, et 3, chacun ayant une configuration spécifique du timing de l'horloge par rapport aux données.
+
+![SPI](./images/spi.png)
+
 ### Initialisation du projet
 
 Si vous avez bien compris cela, vous disposez des connaissances de base nécessaires pour développer ce projet en utilisant le logiciel STM32CubeMX.
@@ -219,34 +247,6 @@ Ensuite, STM32CubeMX peut automatiquement calculer les valeurs des prescalers et
 Pour l'instant, sans optimisation de la consommation d'énergie, nous sélectionnons l'HSE et définissons la fréquence maximale que le microcontrôleur peut supporter.
 
 ![Clock Value Setup](./images/clock_value_setup.png)
-
-#### Bus SPI
-
-Développé par Motorola dans les années 1980, le bus série SPI (Serial Peripheral Interface) est un protocole de communication synchrone utilisé principalement pour échanger des données entre un microcontrôleur et des périphériques tels que des capteurs, mémoires, ou modules de communication.
-
-**Structure et Fonctionnement**
-Le bus SPI est composé de quatre lignes principales :
-
-- MOSI (Master Out Slave In) : Ligne de données où le maître envoie des données au(x) esclave(s).
-- MISO (Master In Slave Out) : Ligne de données où l'esclave envoie des données au maître.
-- SCLK (Serial Clock) : Ligne d'horloge générée par le maître pour synchroniser la communication.
-- SS/CS (Slave Select/Chip Select) : Ligne de sélection du périphérique esclave. Cette ligne est tirée bas pour activer l’esclave spécifique avec lequel le maître souhaite communiquer.
-
-**Modes de Communication**
-Le SPI fonctionne en mode maître-esclave. Le maître contrôle le bus SPI en générant le signal d’horloge et en sélectionnant les esclaves avec lesquels il souhaite communiquer. Un ou plusieurs esclaves peuvent être connectés au même bus, et le maître sélectionne l'esclave actif en tirant la ligne SS/CS de cet esclave à l’état bas.
-
-La communication SPI se fait en full-duplex, ce qui signifie que les données peuvent être envoyées et reçues simultanément.
-À chaque cycle d'horloge, un bit est transmis du maître à l'esclave sur la ligne MOSI, et simultanément, un bit est transmis de l'esclave au maître sur la ligne MISO.
-La synchronisation des données est contrôlée par l'horloge SCLK, et le nombre de bits à transmettre est généralement un multiple de 8 (octet).
-
-**Configuration des Modes SPI**
-Le SPI dispose de quatre modes de communication, définis par deux paramètres :
-
-CPOL (Clock Polarity) : Détermine l'état de repos de l'horloge (bas ou haut).
-CPHA (Clock Phase) : Détermine à quel front d'horloge (montant ou descendant) les données sont échantillonnées.
-Les quatre combinaisons possibles de CPOL et CPHA sont les modes SPI 0, 1, 2, et 3, chacun ayant une configuration spécifique du timing de l'horloge par rapport aux données.
-
-![SPI](./images/spi.png)
 
 ### CC1101 Driver
 

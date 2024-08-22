@@ -164,7 +164,7 @@ static HAL_StatusTypeDef CC1101_SendPacket(CC1101_HandleTypeDef *this,
   CC1101_WriteReg(this, CC1101_STX, NULL, 0);
 
   CC1101_ReadReg(this, CC1101_MARCSTATE, &state, 1);
-  while ((state & 0x1F) != 0x01)
+  while ((state & 0x1F) != 0x01) // Check for IDLE state
     CC1101_ReadReg(this, CC1101_MARCSTATE, &state, 1);
 
   CC1101_WriteReg(this, CC1101_SFTX, NULL, 0);

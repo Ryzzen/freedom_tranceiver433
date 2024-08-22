@@ -5,7 +5,6 @@
 extern "C" {
 #endif
 
-#include "stm32f1xx_hal.h"
 #include <stdint.h>
 
 #include "remote_module.h"

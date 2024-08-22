@@ -2,9 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "cc1101.h"
-#include "cmsis_gcc.h"
-
 static void PWM_Encode(uint8_t *in, uint8_t *out, size_t size_in) {
   for (size_t i = 0; i < size_in; i++) {
     for (int8_t b = 0; b < 8; b++) {

@@ -1,4 +1,3 @@
-
 #include "nice.h"
 #include <stdlib.h>
 #include "cc1101.h"
@@ -56,7 +55,7 @@ static void* Nice_CC1101RfSettings()
 		0x81,  // TEST2         Various Test Settings
 		0x35,  // TEST1         Various Test Settings
 		0x09,  // TEST0         Various Test Settings
-		{0x00,0xc0,0x00,0x00,0x00,0x00,0x00,0x00},
+		{0x00,0xc0,0x00,0x00,0x00,0x00,0x00,0x00}, // PA Table
 	};
 
 	return (void*)(settings);

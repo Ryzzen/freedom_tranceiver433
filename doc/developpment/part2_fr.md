@@ -1067,7 +1067,7 @@ int main(void) {
 
 Me voici donc chez moi, à 23h30, assis à côté de mon portail pour tester le bruteforce de son identifiant. Après seulement deux minutes d'attente, mon portail s'ouvre !
 
-En bonus, le bruteforce du canal m'a permis d'ouvrir le portail de mon garage en sous-sol ainsi que les barrières du parking devant chez moi. :p
+En bonus, le bruteforce du champ correspondant aux canaux m'a permis d'ouvrir le portail de mon garage en sous-sol ainsi que les barrières du parking devant chez moi. :p
 
 On peut constater que ces anciennes télécommandes de garage ne sont pas très sécurisées.
 Heureusement, les télécommandes plus récentes intègrent généralement un code tournant (rolling code) pour compliquer le bruteforce. Cependant, bien que ces modèles soient plus sécurisés, ils ne sont pas exempts de vulnérabilités.

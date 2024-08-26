@@ -254,8 +254,6 @@ Maintenant que tout est configuré, nous pouvons interfacer notre microcontrôle
 
 Pour écrire ce driver, je m'appuie sur trois documents de Texas Instruments :
 
-Pour écrire ce driver, je m'appuie sur trois documents de Texas Instruments :
-
 - Documentation principale : [CC1101 Datasheet](https://www.ti.com/lit/ds/symlink/cc1101.pdf?ts=1721033884779&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252Fde-de%252FCC1101%253Fbm-verify%253DAAQAAAAJ_____xUdvi-J-5PkGdRVZxyuX1OJePSsmBDICuWpFKuKCU7fFDiiVk6ohjPTBQjzyhQmlxeGorGXG1UOvObeVS2Htdq-ogSeSXQG442LJeDCTUyEKjFdO8w9Ect6ME1l50d573k7pihzOD6EvnwX3xPNgqq5GyaAAIfge3sDSejxi9F599MMaO504KF1E-1XPIH8qRPDWWxWNwNZSTawZam8BP1THnyMufQQinI1U4u8k1WzuTn1oRQtBpk7h756ZCr2Dwfij9VGGA75inoBs4mm-1Yb3byJ2rLDTTnfW-seuQrl5QKQO-YhKxQwvg)
 - Manuel utilisateur : [CC1101 Module Manual](https://www.elechouse.com/elechouse/images/product/CC1101%20Wirless%20Data%20Transmittion%20Module/CC1101%20Module%20Manual.pdf)
 - Design Note DN503 : [Design Note DN503](https://www.ti.com/lit/an/swra112b/swra112b.pdf?ts=1720967225792)

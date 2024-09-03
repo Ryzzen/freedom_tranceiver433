@@ -20,5 +20,5 @@ make flash
 
 ## Documentation (french)
 
-[Part 1](./doc/radio_analysis/part1_fr.md)
-[Part 2](./doc/developpment/part2_fr.md)
+- [Part 1](./doc/radio_analysis/part1_fr.md)
+- [Part 2](./doc/developpment/part2_fr.md)

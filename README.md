@@ -18,7 +18,7 @@ Make sure to have OpenOCD installed and your STLinkv2 plugged in.
 make flash
 ```
 
-## Documentation (french)
+## Walkthrough (french)
 
 - [Part 1](./doc/radio_analysis/part1_fr.md)
 - [Part 2](./doc/developpment/part2_fr.md)

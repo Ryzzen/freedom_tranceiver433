@@ -248,6 +248,38 @@ Pour l'instant, sans optimisation de la consommation d'énergie, nous sélection
 
 ![Clock Value Setup](./images/clock_value_setup.png)
 
+Enfin, nous configurons le bus SPI, qui nous permettra de communiquer avec le CC1101.
+
+![SPI CUBEMX](./images/spi_cubemx.png)
+
+Nous nous assurons de désactiver le Chip Select hardware, car nous le contrôlerons nous-mêmes via le logiciel.
+J'utilise ici la broche PB12, et pour la configurer par logiciel, il suffit de la passer en mode sortie.
+
+```c
+static void MX_GPIO_Init(void) {
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /* PB12 Enable in output mode */
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+}
+```
+
+Pour simplifier son utilisation, on peut définir une macro.
+
+```c
+#define SPI_SELECT HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+#define SPI_DESELECT HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+```
+
 ### CC1101 Driver
 
 Maintenant que tout est configuré, nous pouvons interfacer notre microcontrôleur avec le Texas Instruments CC1101, qui servira de baseband.
